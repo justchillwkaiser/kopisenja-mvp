@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============ Better Auth (1.6) ============
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("STAFF") // OWNER | MANAGER | STAFF
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String? // scrypt hash "salt:key" untuk providerId "credential"
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([providerId, accountId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ============ Domain: Kopi Senja ============
+
+model Outlet {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  address   String
+  city      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stocks Stock[]
+  sales  Sale[]
+
+  @@index([isActive])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  sku          String   @unique
+  unit         String   @default("unit") // kg | unit | pcs
+  reorderLevel Int      @default(10)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stocks    Stock[]
+  saleItems SaleItem[]
+}
+
+model Stock {
+  id        String   @id @default(cuid())
+  outletId  String
+  productId String
+  quantity  Int
+  updatedAt DateTime @updatedAt
+
+  outlet  Outlet  @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, productId])
+  @@index([outletId])
+  @@index([productId])
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  outletId   String
+  totalAmount Decimal @db.Decimal(10, 2)
+  itemCount  Int
+  soldAt     DateTime @default(now())
+
+  outlet    Outlet     @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  saleItems SaleItem[]
+
+  @@index([outletId, soldAt])
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}

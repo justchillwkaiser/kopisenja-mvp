@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #f7f2ec;
+  --color-surface: #fffdf9;
+  --color-surface-2: #f1e9df;
+  --color-espresso: #2b211a;
+  --color-taupe: #6f6257;
+  --color-taupe-faint: #a29488;
+  --color-line: #e7ddd1;
+  --color-accent: #7a4a2b;
+  --color-accent-soft: #f0e2d6;
+  --color-ok: #3f6b58;
+  --color-ok-bg: #e2ece5;
+  --color-warn: #8a5f24;
+  --color-warn-bg: #f4e9d4;
+  --color-bad: #97493a;
+  --color-bad-bg: #f4e2dc;
+
+  --radius-panel: 16px;
+  --radius-ctrl: 10px;
+
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --shadow-soft: 0 12px 32px rgba(70, 45, 20, 0.1);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Shared components ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-ctrl);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+  cursor: pointer;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn-primary {
+  background: var(--color-espresso);
+  color: var(--color-surface);
+}
+.btn-primary:hover {
+  opacity: 0.92;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--color-line);
+  color: var(--color-espresso);
+}
+.btn-ghost:hover {
+  background: var(--color-surface-2);
+}
+.btn-soft {
+  background: var(--color-surface-2);
+  color: var(--color-espresso);
+}
+.btn-soft:hover {
+  background: #e8ded2;
+}
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.btn-block {
+  width: 100%;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.badge-ok {
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+.badge-warn {
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+.badge-bad {
+  background: var(--color-bad-bg);
+  color: var(--color-bad);
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.role-owner {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.role-manager {
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+.role-staff {
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.kpi-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--color-taupe-faint);
+  text-transform: uppercase;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.field input {
+  padding: 11px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-ctrl);
+  background: var(--color-surface);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-espresso);
+}
+.field input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  position: fixed;
+  inset: 14px auto 14px 14px;
+  width: 248px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+}
+
+/* ---------- Bottom sheet ---------- */
+
+.sheet {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 50;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 24px;
+  box-shadow: 0 -8px 40px rgba(60, 40, 20, 0.16);
+  transform: translateY(120%);
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 10px 14px calc(18px + env(safe-area-inset-bottom));
+}
+.sheet.show {
+  transform: translateY(0);
+}
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 40, 20, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  z-index: 40;
+}
+.sheet-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------- Table ---------- */
+
+.table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.table-wrap th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-taupe-faint);
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--color-line);
+  font-weight: 600;
+}
+.table-wrap td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+.table-wrap tbody tr:last-child td {
+  border-bottom: none;
+}
+.table-wrap tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+}
