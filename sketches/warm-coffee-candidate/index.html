@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KOPI SENJA - Ops Dashboard (Mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<style>
+:root {
+  --bg: #f7f2ec;
+  --surface: #fffdf9;
+  --surface-2: #f1e9df;
+  --text: #2b211a;
+  --text-soft: #6f6257;
+  --text-faint: #a29488;
+  --line: #e7ddd1;
+  --accent: #7a4a2b;
+  --accent-soft: #f0e2d6;
+  --accent-ink: #fffdf9;
+  --ok: #3f6b58;
+  --ok-bg: #e2ece5;
+  --warn: #8a5f24;
+  --warn-bg: #f4e9d4;
+  --bad: #97493a;
+  --bad-bg: #f4e2dc;
+  --r-panel: 16px;
+  --r-ctrl: 10px;
+  --shadow-soft: 0 12px 32px rgba(70, 45, 20, 0.10);
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- LOGIN ---------- */
+.login-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.login-card {
+  width: 100%; max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  padding: 36px 32px 32px;
+}
+.brand-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.brand-cup {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; font-size: 22px;
+}
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+.brand-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--text-faint); text-transform: uppercase; }
+.login-title { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; }
+.login-sub { color: var(--text-soft); font-size: 14px; margin-bottom: 24px; line-height: 1.55; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.field input {
+  width: 100%; padding: 11px 12px;
+  border: 1px solid var(--line); border-radius: var(--r-ctrl);
+  background: var(--surface); font-family: inherit; font-size: 14px; color: var(--text);
+}
+.field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.field-err { display: none; font-size: 12.5px; color: var(--bad); margin-top: 6px; }
+.field-err.show { display: block; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--r-ctrl); border: 1px solid transparent;
+  font-size: 14px; font-weight: 600; padding: 11px 16px;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--text); color: var(--accent-ink); width: 100%; }
+.btn-primary:hover { opacity: 0.92; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-soft { background: var(--surface-2); color: var(--text); }
+.btn-soft:hover { background: #e8ded2; }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
+.demo-box { margin-top: 22px; border-top: 1px dashed var(--line); padding-top: 18px; }
+.demo-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-faint); text-transform: uppercase; margin-bottom: 10px; }
+.demo-roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.demo-role { text-align: center; padding: 9px 4px; font-size: 12.5px; font-weight: 600; }
+.role-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; }
+.role-owner { background: var(--accent-soft); color: var(--accent); }
+.role-manager { background: var(--ok-bg); color: var(--ok); }
+.role-staff { background: var(--warn-bg); color: var(--warn); }
+
+/* ---------- APP SHELL ---------- */
+.app { display: none; min-height: 100dvh; }
+.app.show { display: block; }
+.sidebar {
+  position: fixed; inset: 14px auto 14px 14px; width: 248px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; box-shadow: var(--shadow-soft);
+  display: flex; flex-direction: column; padding: 20px 14px;
+}
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.side-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; border-radius: var(--r-ctrl);
+  font-size: 14px; font-weight: 500; color: var(--text-soft);
+  border: none; background: transparent; text-align: left; width: 100%;
+}
+.nav-item i { font-size: 19px; }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-item .nav-count { margin-left: auto; font-family: var(--font-mono); font-size: 10px; background: var(--bad-bg); color: var(--bad); padding: 2px 7px; border-radius: 999px; }
+.side-user { border-top: 1px solid var(--line); padding-top: 14px; display: flex; align-items: center; gap: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--text); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.user-meta { flex: 1; min-width: 0; }
+.user-name { font-size: 13.5px; font-weight: 600; }
+.user-role { margin-top: 4px; }
+
+.main { margin-left: 276px; padding: 26px 28px 60px; max-width: 1180px; }
+.topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.topbar h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.topbar-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.select {
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--r-ctrl);
+  background: var(--surface); font-family: inherit; font-size: 13.5px; color: var(--text);
+}
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text-soft);
+  display: grid; place-items: center; font-size: 19px;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* KPI strip */
+.kpi-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel);
+  box-shadow: var(--shadow-soft); overflow: hidden; margin-bottom: 20px;
+}
+.kpi { padding: 18px 20px; }
+.kpi + .kpi { border-left: 1px solid var(--line); }
+.kpi-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-faint); text-transform: uppercase; margin-bottom: 8px; }
+.kpi-value { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.kpi-delta { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 11px; margin-top: 6px; }
+.delta-up { color: var(--ok); }
+.delta-down { color: var(--bad); }
+.kpi-warn .kpi-value { color: var(--bad); }
+
+/* Grid main */
+.dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+.panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-panel); box-shadow: var(--shadow-soft);
+  padding: 20px;
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.panel-title { font-size: 15px; font-weight: 600; }
+.panel-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); text-transform: uppercase; }
+
+/* Bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 170px; padding-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+.bar {
+  width: 100%; max-width: 42px; border-radius: 6px 6px 3px 3px;
+  background: var(--accent-soft); position: relative; min-height: 6px;
+}
+.bar.hot { background: var(--accent); }
+.bar:hover { filter: brightness(0.96); }
+.bar-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+.bar-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-soft); opacity: 0; transition: opacity 0.15s ease; }
+.bar-col:hover .bar-val { opacity: 1; }
+
+/* Alert list */
+.alert-list { display: flex; flex-direction: column; gap: 10px; }
+.alert-item {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+.alert-item.warn { border-color: var(--warn-bg); background: var(--warn-bg); }
+.alert-item.bad { border-color: var(--bad-bg); background: var(--bad-bg); }
+.alert-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; }
+.alert-item.warn .alert-icon { background: #fff; color: var(--warn); }
+.alert-item.bad .alert-icon { background: #fff; color: var(--bad); }
+.alert-body { flex: 1; min-width: 0; }
+.alert-name { font-size: 13.5px; font-weight: 600; }
+.alert-outlet { font-size: 12px; color: var(--text-soft); margin-top: 1px; }
+.alert-qty { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+
+/* Outlet mini bars */
+.outlet-bars { display: flex; flex-direction: column; gap: 14px; }
+.outlet-row { display: flex; align-items: center; gap: 12px; }
+.outlet-row .o-name { width: 86px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.o-track { flex: 1; height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.o-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+.outlet-row:nth-child(2) .o-fill { background: var(--accent); opacity: 0.72; }
+.outlet-row:nth-child(3) .o-fill { background: var(--accent); opacity: 0.48; }
+.o-val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; width: 78px; text-align: right; flex-shrink: 0; }
+
+/* ---------- STOCK PAGE ---------- */
+.filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); font-size: 13px; font-weight: 500; color: var(--text-soft);
+}
+.tab.active { background: var(--text); color: var(--accent-ink); border-color: var(--text); }
+.tab .tab-count { font-family: var(--font-mono); font-size: 10px; margin-left: 4px; opacity: 0.7; }
+.table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--shadow-soft); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-faint); text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line); font-weight: 600;
+}
+td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface-2); }
+tr.row-bad { background: var(--bad-bg); }
+tr.row-warn { background: var(--warn-bg); }
+.prod-cell { display: flex; align-items: center; gap: 11px; }
+.prod-emoji { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; font-size: 16px; }
+.prod-name { font-weight: 600; }
+.prod-sku { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-faint); margin-top: 2px; }
+.stock-bar { width: 110px; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.stock-fill { height: 100%; border-radius: 999px; }
+.stock-fill.ok { background: var(--ok); }
+.stock-fill.warn { background: var(--warn); }
+.stock-fill.bad { background: var(--bad); }
+.stock-num { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  padding: 4px 9px; border-radius: 999px; text-transform: uppercase;
+}
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-bad { background: var(--bad-bg); color: var(--bad); }
+
+/* ---------- TOAST ---------- */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: var(--accent-ink);
+  padding: 12px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-soft); opacity: 0; transition: all 0.25s ease; z-index: 60;
+  display: flex; align-items: center; gap: 9px; max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast i { font-size: 17px; }
+
+/* ---------- MOBILE BOTTOM SHEET ---------- */
+.sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(60, 40, 20, 0.35);
+  opacity: 0; pointer-events: none; transition: opacity 0.22s ease; z-index: 40;
+}
+.sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 50;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 24px;
+  box-shadow: 0 -8px 40px rgba(60, 40, 20, 0.16);
+  transform: translateY(120%); transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 10px 14px calc(18px + env(safe-area-inset-bottom));
+}
+.sheet.show { transform: translateY(0); }
+.sheet-grabber { width: 40px; height: 4px; border-radius: 999px; background: var(--line); margin: 6px auto 10px; }
+.sheet-nav { display: flex; flex-direction: column; gap: 2px; }
+.sheet-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px;
+  border-radius: 12px; border: none; background: transparent; font-size: 15px; font-weight: 500; color: var(--text);
+  text-align: left; width: 100%;
+}
+.sheet-item i { font-size: 20px; color: var(--text-soft); }
+.sheet-item.active { background: var(--accent-soft); color: var(--accent); }
+.sheet-item.active i { color: var(--accent); }
+.sheet-user { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); margin-top: 10px; padding: 14px 8px 2px; }
+
+.mobile-fab { display: none; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 18px 16px 90px; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .kpi + .kpi { border-left: none; }
+  .kpi:nth-child(odd) { border-right: 1px solid var(--line); }
+  .kpi:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .dash-grid { grid-template-columns: 1fr; }
+  .mobile-fab {
+    display: grid; position: fixed; right: 18px; bottom: 18px; z-index: 45;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--text); color: var(--accent-ink); border: none;
+    box-shadow: var(--shadow-soft); place-items: center; font-size: 26px;
+  }
+  .topbar { flex-wrap: wrap; }
+  .topbar-right { margin-left: 0; width: 100%; }
+  .topbar-right .select { flex: 1; }
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 640px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login-wrap" id="screen-login">
+  <div class="login-card">
+    <div class="brand-mark">
+      <div class="brand-cup"><i class="ph-fill ph-coffee"></i></div>
+      <div>
+        <div class="brand-name">KOPI SENJA</div>
+        <div class="brand-sub">Ops Dashboard</div>
+      </div>
+    </div>
+    <h1 class="login-title">Selamat kembali.</h1>
+    <p class="login-sub">Log masuk untuk lihat jualan, stok, dan laporan cawangan dalam satu tempat.</p>
+    <div class="field">
+      <label for="login-email">Emel</label>
+      <input id="login-email" type="email" placeholder="nama@kopisenja.my" value="owner@kopisenja.my" />
+    </div>
+    <div class="field">
+      <label for="login-pass">Kata laluan</label>
+      <input id="login-pass" type="password" placeholder="Kata laluan" value="demo1234" />
+      <div class="field-err" id="login-err">Kata laluan tidak tepat. Cuba demo role di bawah atau semak semula.</div>
+    </div>
+    <button class="btn btn-primary" onclick="tryLogin()">Log Masuk <i class="ph ph-arrow-right"></i></button>
+    <div class="demo-box">
+      <div class="demo-label">Demo - masuk terus sebagai role</div>
+      <div class="demo-roles">
+        <button class="btn btn-soft demo-role" onclick="loginAs('owner')">Owner</button>
+        <button class="btn btn-soft demo-role" onclick="loginAs('manager')">Manager</button>
+        <button class="btn btn-soft demo-role" onclick="loginAs('staff')">Staff</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app">
+
+  <!-- Sidebar (desktop) -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="brand-cup" style="width:34px;height:34px;font-size:18px"><i class="ph-fill ph-coffee"></i></div>
+      <div>
+        <div class="brand-name" style="font-size:16px">KOPI SENJA</div>
+        <div class="brand-sub" style="font-size:9px">Ops Dashboard</div>
+      </div>
+    </div>
+    <nav class="side-nav">
+      <button class="nav-item active" data-route="dashboard" onclick="nav('dashboard')"><i class="ph ph-chart-line"></i> Ringkasan</button>
+      <button class="nav-item" data-route="stock" onclick="nav('stock')"><i class="ph ph-package"></i> Stok <span class="nav-count" id="nav-stock-count">3</span></button>
+      <button class="nav-item" data-route="outlets" onclick="nav('outlets')"><i class="ph ph-storefront"></i> Cawangan</button>
+      <button class="nav-item" data-route="reports" onclick="nav('reports')"><i class="ph ph-file-text"></i> Laporan</button>
+    </nav>
+    <div class="side-user">
+      <div class="avatar" id="side-avatar">AM</div>
+      <div class="user-meta">
+        <div class="user-name" id="side-name">Aiman Mukhriz</div>
+        <div class="user-role"><span class="role-chip role-owner" id="side-role">Owner</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <h1 id="page-title">Ringkasan</h1>
+        <div class="topbar-date" id="page-date">Ahad, 16 Ogos 2026</div>
+      </div>
+      <div class="topbar-right">
+        <select class="select" id="outlet-select">
+          <option value="all">Semua Cawangan</option>
+          <option value="ipoh">Ipoh (Utama)</option>
+          <option value="taiping">Taiping</option>
+          <option value="sitiawan">Sitiawan</option>
+        </select>
+        <button class="icon-btn" onclick="toast('Pemberitahuan: 3 stok rendah')"><i class="ph ph-bell"></i></button>
+      </div>
+    </div>
+
+    <!-- Screen: Dashboard -->
+    <section class="screen" id="screen-dashboard">
+      <div class="kpi-strip">
+        <div class="kpi">
+          <div class="kpi-label">Jualan Hari Ini</div>
+          <div class="kpi-value">RM 1,248.50</div>
+          <div class="kpi-delta delta-up"><i class="ph ph-trend-up"></i> +12.4%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Jualan Minggu Ini</div>
+          <div class="kpi-value">RM 8,412.30</div>
+          <div class="kpi-delta delta-up"><i class="ph ph-trend-up"></i> +4.1%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Pesanan Hari Ini</div>
+          <div class="kpi-value">142</div>
+          <div class="kpi-delta delta-up"><i class="ph ph-trend-up"></i> +8</div>
+        </div>
+        <div class="kpi kpi-warn">
+          <div class="kpi-label">Stok Rendah</div>
+          <div class="kpi-value">3</div>
+          <div class="kpi-delta delta-down"><i class="ph ph-warning"></i> Perlu tindakan</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Jualan 7 Hari Terakhir</div>
+            <div class="panel-sub">RM ribu</div>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-col"><span class="bar-val">RM 1.9k</span><div class="bar" style="height:62%"></div><span class="bar-label">Isnin</span></div>
+            <div class="bar-col"><span class="bar-val">RM 2.1k</span><div class="bar" style="height:70%"></div><span class="bar-label">Selasa</span></div>
+            <div class="bar-col"><span class="bar-val">RM 1.7k</span><div class="bar" style="height:56%"></div><span class="bar-label">Rabu</span></div>
+            <div class="bar-col"><span class="bar-val">RM 2.4k</span><div class="bar" style="height:80%"></div><span class="bar-label">Khamis</span></div>
+            <div class="bar-col"><span class="bar-val">RM 2.0k</span><div class="bar" style="height:66%"></div><span class="bar-label">Jumaat</span></div>
+            <div class="bar-col"><span class="bar-val">RM 3.1k</span><div class="bar hot" style="height:100%"></div><span class="bar-label">Sabtu</span></div>
+            <div class="bar-col"><span class="bar-val">RM 2.7k</span><div class="bar hot" style="height:88%"></div><span class="bar-label">Ahad</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Perlu Tindakan</div>
+            <div class="panel-sub">3 item</div>
+          </div>
+          <div class="alert-list">
+            <div class="alert-item bad">
+              <div class="alert-icon"><i class="ph-fill ph-package"></i></div>
+              <div class="alert-body">
+                <div class="alert-name">Gula Melaka</div>
+                <div class="alert-outlet">Ipoh (Utama)</div>
+              </div>
+              <span class="alert-qty" style="color:var(--bad)">HABIS</span>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon"><i class="ph-fill ph-package"></i></div>
+              <div class="alert-body">
+                <div class="alert-name">Susu Segar</div>
+                <div class="alert-outlet">Taiping</div>
+              </div>
+              <span class="alert-qty" style="color:var(--warn)">4 unit</span>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon"><i class="ph-fill ph-package"></i></div>
+              <div class="alert-body">
+                <div class="alert-name">Paper Cup 12oz</div>
+                <div class="alert-outlet">Sitiawan</div>
+              </div>
+              <span class="alert-qty" style="color:var(--warn)">6 unit</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-head">
+            <div class="panel-title">Jualan per Cawangan - Hari Ini</div>
+            <div class="panel-sub">Semua cawangan</div>
+          </div>
+          <div class="outlet-bars">
+            <div class="outlet-row">
+              <div class="o-name">Ipoh (Utama)</div>
+              <div class="o-track"><div class="o-fill" style="width:100%"></div></div>
+              <div class="o-val">RM 612.40</div>
+            </div>
+            <div class="outlet-row">
+              <div class="o-name">Taiping</div>
+              <div class="o-track"><div class="o-fill" style="width:62%"></div></div>
+              <div class="o-val">RM 379.80</div>
+            </div>
+            <div class="outlet-row">
+              <div class="o-name">Sitiawan</div>
+              <div class="o-track"><div class="o-fill" style="width:42%"></div></div>
+              <div class="o-val">RM 256.30</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen: Stock -->
+    <section class="screen" id="screen-stock" style="display:none">
+      <div class="filter-tabs">
+        <button class="tab active" data-tab="all" onclick="filterStock('all')">Semua <span class="tab-count">12</span></button>
+        <button class="tab" data-tab="warn" onclick="filterStock('warn')">Stok Rendah <span class="tab-count">2</span></button>
+        <button class="tab" data-tab="bad" onclick="filterStock('bad')">Habis <span class="tab-count">1</span></button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Cawangan</th>
+              <th>Tahap Stok</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="stock-body">
+            <tr data-status="ok">
+              <td><div class="prod-cell"><div class="prod-emoji">☕</div><div><div class="prod-name">Espresso Beans</div><div class="prod-sku">KS-001</div></div></div></td>
+              <td>Ipoh (Utama)</td>
+              <td><div class="stock-num">48 kg</div></td>
+              <td><span class="badge badge-ok">OK</span></td>
+              <td><button class="btn btn-soft btn-sm" onclick="toast('Buka borang tambah stok Espresso Beans')">Tambah Stok</button></td>
+            </tr>
+            <tr data-status="warn">
+              <td><div class="prod-cell"><div class="prod-emoji">🥛</div><div><div class="prod-name">Susu Segar</div><div class="prod-sku">KS-004</div></div></div></td>
+              <td>Taiping</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="stock-bar"><div class="stock-fill warn" style="width:18%"></div></div>
+                  <span class="stock-num">4 unit</span>
+                </div>
+              </td>
+              <td><span class="badge badge-warn">RENDAH</span></td>
+              <td><button class="btn btn-soft btn-sm" onclick="toast('Buka borang tambah stok Susu Segar')">Tambah Stok</button></td>
+            </tr>
+            <tr data-status="bad">
+              <td><div class="prod-cell"><div class="prod-emoji">🍯</div><div><div class="prod-name">Gula Melaka</div><div class="prod-sku">KS-007</div></div></div></td>
+              <td>Ipoh (Utama)</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="stock-bar"><div class="stock-fill bad" style="width:4%"></div></div>
+                  <span class="stock-num">0 unit</span>
+                </div>
+              </td>
+              <td><span class="badge badge-bad">HABIS</span></td>
+              <td><button class="btn btn-soft btn-sm" onclick="toast('Buka borang tambah stok Gula Melaka')">Tambah Stok</button></td>
+            </tr>
+            <tr data-status="ok">
+              <td><div class="prod-cell"><div class="prod-emoji">🥐</div><div><div class="prod-name">Croissant</div><div class="prod-sku">KS-011</div></div></div></td>
+              <td>Ipoh (Utama)</td>
+              <td><div class="stock-num">32 unit</div></td>
+              <td><span class="badge badge-ok">OK</span></td>
+              <td><button class="btn btn-soft btn-sm" onclick="toast('Buka borang tambah stok Croissant')">Tambah Stok</button></td>
+            </tr>
+            <tr data-status="warn">
+              <td><div class="prod-cell"><div class="prod-emoji">🥤</div><div><div class="prod-name">Paper Cup 12oz</div><div class="prod-sku">KS-015</div></div></div></td>
+              <td>Sitiawan</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="stock-bar"><div class="stock-fill warn" style="width:12%"></div></div>
+                  <span class="stock-num">6 unit</span>
+                </div>
+              </td>
+              <td><span class="badge badge-warn">RENDAH</span></td>
+              <td><button class="btn btn-soft btn-sm" onclick="toast('Buka borang tambah stok Paper Cup')">Tambah Stok</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel" style="margin-top:16px;display:none" id="stock-empty">
+        <p style="color:var(--text-soft);font-size:14px;text-align:center;padding:14px 0">Tiada item untuk penapis ini. Semua stok sihat.</p>
+      </div>
+    </section>
+
+    <!-- Screen: Outlets -->
+    <section class="screen" id="screen-outlets" style="display:none">
+      <div class="dash-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Ipoh (Utama)</div><span class="role-chip role-owner">FLAGSHIP</span></div>
+          <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Jalan Panglima, Ipoh, Perak</p>
+          <div class="kpi-label">Jualan Hari Ini</div>
+          <div class="kpi-value" style="font-size:22px">RM 612.40</div>
+          <div class="kpi-delta delta-up"><i class="ph ph-trend-up"></i> +9.2%</div>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+            <div class="kpi-label" style="margin-bottom:4px">Stok Rendah</div>
+            <span class="badge badge-bad">Gula Melaka habis</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Taiping</div><span class="role-chip role-manager">CAWANGAN</span></div>
+          <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Jalan Kota, Taiping, Perak</p>
+          <div class="kpi-label">Jualan Hari Ini</div>
+          <div class="kpi-value" style="font-size:22px">RM 379.80</div>
+          <div class="kpi-delta delta-up"><i class="ph ph-trend-up"></i> +2.4%</div>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+            <div class="kpi-label" style="margin-bottom:4px">Stok Rendah</div>
+            <span class="badge badge-warn">Susu Segar 4 unit</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Sitiawan</div><span class="role-chip role-staff">CAWANGAN</span></div>
+          <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Jalan Lumut, Sitiawan, Perak</p>
+          <div class="kpi-label">Jualan Hari Ini</div>
+          <div class="kpi-value" style="font-size:22px">RM 256.30</div>
+          <div class="kpi-delta delta-down"><i class="ph ph-trend-down"></i> -1.8%</div>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+            <div class="kpi-label" style="margin-bottom:4px">Stok Rendah</div>
+            <span class="badge badge-warn">Paper Cup 6 unit</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen: Reports -->
+    <section class="screen" id="screen-reports" style="display:none">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Laporan Mingguan</div>
+          <div class="panel-sub">Mock - contoh laporan</div>
+        </div>
+        <p style="font-size:14px;color:var(--text-soft);line-height:1.6;margin-bottom:18px">
+          Contoh paparan: laporan jualan mingguan dijana automatik setiap Isnin, dihantar ke emel owner. Termasuk jualan per cawangan, produk terlaris, dan senarai stok perlu reorder.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" style="width:auto" onclick="toast('Contoh: laporan dihantar ke emel owner')">Hantar Laporan <i class="ph ph-paper-plane-tilt"></i></button>
+          <button class="btn btn-ghost" onclick="toast('Contoh: buka preview laporan')">Pratonton</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Mobile FAB -->
+<button class="mobile-fab" onclick="toggleSheet()" aria-label="Menu"><i class="ph ph-list"></i></button>
+
+<!-- Bottom Sheet (mobile) -->
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="toggleSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grabber"></div>
+  <nav class="sheet-nav">
+    <button class="sheet-item active" onclick="sheetNav('dashboard')"><i class="ph ph-chart-line"></i> Ringkasan</button>
+    <button class="sheet-item" onclick="sheetNav('stock')"><i class="ph ph-package"></i> Stok</button>
+    <button class="sheet-item" onclick="sheetNav('outlets')"><i class="ph ph-storefront"></i> Cawangan</button>
+    <button class="sheet-item" onclick="sheetNav('reports')"><i class="ph ph-file-text"></i> Laporan</button>
+  </nav>
+  <div class="sheet-user">
+    <div class="avatar" id="sheet-avatar">AM</div>
+    <div class="user-meta">
+      <div class="user-name" id="sheet-name">Aiman Mukhriz</div>
+      <div class="user-role"><span class="role-chip role-owner" id="sheet-role">Owner</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ph ph-check-circle"></i><span id="toast-text">Mesej</span></div>
+
+<script>
+// State
+let currentRole = 'owner';
+let currentScreen = 'dashboard';
+
+const roleData = {
+  owner:   { name: 'Aiman Mukhriz', avatar: 'AM', chip: 'role-owner', label: 'Owner' },
+  manager: { name: 'Nadia Rahimi',  avatar: 'NR', chip: 'role-manager', label: 'Manager' },
+  staff:   { name: 'Faizal Omar',   avatar: 'FO', chip: 'role-staff', label: 'Staff' },
+};
+
+const titles = {
+  dashboard: 'Ringkasan',
+  stock: 'Stok',
+  outlets: 'Cawangan',
+  reports: 'Laporan',
+};
+
+function applyRole(role) {
+  const d = roleData[role];
+  ['side', 'sheet'].forEach((p) => {
+    document.getElementById(p + '-avatar').textContent = d.avatar;
+    document.getElementById(p + '-name').textContent = d.name;
+    document.getElementById(p + '-role').textContent = d.label;
+    document.getElementById(p + '-role').className = 'role-chip ' + d.chip;
+  });
+}
+
+function loginAs(role) {
+  currentRole = role;
+  applyRole(role);
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  nav('dashboard');
+  toast('Log masuk sebagai ' + roleData[role].label);
+}
+
+function tryLogin() {
+  const pass = document.getElementById('login-pass').value;
+  if (pass && pass !== 'demo1234') {
+    document.getElementById('login-err').classList.add('show');
+    return;
+  }
+  document.getElementById('login-err').classList.remove('show');
+  loginAs('owner');
+}
+
+function nav(route) {
+  currentScreen = route;
+  document.querySelectorAll('.screen').forEach((s) => { s.style.display = 'none'; });
+  document.getElementById('screen-' + route).style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach((n) => {
+    n.classList.toggle('active', n.dataset.route === route);
+  });
+  document.getElementById('page-title').textContent = titles[route];
+  closeSheet();
+  window.scrollTo({ top: 0 });
+}
+
+function sheetNav(route) {
+  nav(route);
+  document.querySelectorAll('.sheet-item').forEach((n) => {
+    n.classList.toggle('active', n.textContent.includes(titles[route]));
+  });
+}
+
+function toggleSheet() {
+  const show = !document.getElementById('sheet').classList.contains('show');
+  document.getElementById('sheet').classList.toggle('show', show);
+  document.getElementById('sheet-backdrop').classList.toggle('show', show);
+}
+
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('show');
+  document.getElementById('sheet-backdrop').classList.remove('show');
+}
+
+function filterStock(status) {
+  document.querySelectorAll('#stock-body tr').forEach((tr) => {
+    const show = status === 'all' || tr.dataset.status === status;
+    tr.style.display = show ? '' : 'none';
+  });
+  const visible = Array.from(document.querySelectorAll('#stock-body tr')).filter((tr) => tr.style.display !== 'none').length;
+  document.getElementById('stock-empty').style.display = visible === 0 ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === status));
+}
+
+let toastTimer = null;
+function toast(msg) {
+  document.getElementById('toast-text').textContent = msg;
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>
