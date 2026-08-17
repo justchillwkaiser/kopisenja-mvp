@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KOPI SENJA · Buku Tunai / Ledger · draft design</title>
+<!--
+  THESIS: Dashboard operasi F&B sebagai buku tunai kedai - jujur, familiar, tidak menjerit. Setiap angka adalah entri ledger yang boleh dipercayai. Menolak dashboard SaaS generic (cards-in-cards, biru, Inter).
+  OWN-WORLD: Kertas ledger off-white, ruled lines halus, ink hijau tua (banker's green), stamp merah untuk status, mono untuk setiap entri.
+  STORY: Pengunjung rasa kedai diurus dengan teliti - setiap entri kelihatan dan boleh dipercayai, macam buku tunai kedai lama.
+  FIRST VIEWPORT: Masthead ledger (tajuk serif + tarikh), JUMLAH HARI INI (4 entri), Order Queue sebagai lajur berjalan, Stok sebagai inventory sheet, Cawangan sebagai BUKU CABANG.
+  FORM: Ledger (safer register pick), seed 9e10abf6.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f6f2e9;
+  --paper-2: #efe9dc;
+  --paper-3: #e7e0d0;
+  --ink: #1e3a2d;
+  --ink-2: #2c4a3c;
+  --ink-soft: #5c6b5c;
+  --ink-faint: #8a938a;
+  --line: #d8d2c4;
+  --line-strong: #c4bca9;
+  --accent: #a32f24;
+  --accent-2: #b07a2e;
+  --green-ink: #2e6b4f;
+  --white-paper: #fdfbf6;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --mono: 'Space Mono', monospace;
+  --serif: 'Fraunces', Georgia, serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--paper);
+  background-image: radial-gradient(var(--line) 0.5px, transparent 0.5px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ---------- shell ---------- */
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--paper-2);
+  border-right: 1px solid var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand { padding: 4px 8px 16px; border-bottom: 1px solid var(--line-strong); margin-bottom: 16px; }
+.brand-name { font-family: var(--serif); font-size: 17px; font-weight: 700; letter-spacing: 0.01em; }
+.brand-sub { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); letter-spacing: 0.16em; margin-top: 4px; text-transform: uppercase; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  color: var(--ink-soft);
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--paper-3); color: var(--ink); }
+.nav-item.active { background: var(--paper-3); color: var(--ink); border-color: var(--line-strong); font-weight: 700; }
+.nav-item.active::before { content: '▸'; color: var(--accent); margin-left: -10px; }
+.nav-icon { width: 16px; text-align: center; font-size: 13px; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: var(--white-paper);
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid var(--line-strong);
+  font-size: 9px;
+  color: var(--ink-faint);
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+}
+.role-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: var(--ink);
+}
+.role-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-ink); }
+
+.main { flex: 1; min-width: 0; padding: 26px 30px 44px; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.page-title { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.page-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); letter-spacing: 0.12em; margin-top: 6px; text-transform: uppercase; }
+.page-actions { display: flex; gap: 10px; }
+.folio {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 4px 10px;
+  background: var(--white-paper);
+}
+
+/* ---------- ledger KPI ---------- */
+.ledger-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.ledger-entry {
+  background: var(--white-paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  position: relative;
+}
+.ledger-entry::before {
+  content: '';
+  position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px;
+  background: var(--entry-accent, var(--line-strong));
+  border-radius: 0 2px 2px 0;
+}
+.ledger-entry[data-accent="green"] { --entry-accent: var(--green-ink); }
+.ledger-entry[data-accent="amber"] { --entry-accent: var(--accent-2); }
+.ledger-entry[data-accent="red"] { --entry-accent: var(--accent); }
+.ledger-entry[data-accent="ink"] { --entry-accent: var(--ink); }
+.ledger-label {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+.ledger-value {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.ledger-value .small { font-size: 12px; color: var(--ink-soft); font-family: var(--mono); font-weight: 400; }
+.ledger-note { font-size: 9px; margin-top: 6px; color: var(--ink-faint); letter-spacing: 0.06em; }
+.ledger-note .up { color: var(--green-ink); }
+.ledger-note .down { color: var(--accent); }
+
+/* ---------- sheet panel ---------- */
+.sheet {
+  background: var(--white-paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 0 var(--line);
+}
+.sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 12px;
+}
+.sheet-title { font-family: var(--serif); font-size: 15px; font-weight: 600; }
+.sheet-title .no { color: var(--accent); font-family: var(--mono); font-size: 10px; margin-right: 6px; letter-spacing: 0.1em; }
+.sheet-meta { font-size: 9px; color: var(--ink-faint); letter-spacing: 0.1em; }
+.sheet-meta b { color: var(--ink-soft); }
+
+/* ---------- order queue (lajur entri) ---------- */
+.order-rows { display: grid; gap: 8px; }
+.order-row {
+  display: grid;
+  grid-template-columns: 70px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  border-left: 3px solid var(--row-accent, var(--line-strong));
+}
+.order-row[data-status="baru"] { --row-accent: var(--green-ink); }
+.order-row[data-status="diproses"] { --row-accent: var(--accent-2); }
+.order-row[data-status="siap"] { --row-accent: var(--ink-soft); }
+.order-row[data-status="batal"] { --row-accent: var(--accent); }
+.order-id { font-size: 11px; font-weight: 700; }
+.order-items { font-size: 11px; color: var(--ink); line-height: 1.5; }
+.order-price { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stamp {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.stamp-baru { background: rgba(46,107,79,0.14); color: var(--green-ink); }
+.stamp-proses { background: rgba(176,122,46,0.16); color: #7a5218; }
+.stamp-siap { background: rgba(92,107,92,0.14); color: var(--ink-soft); }
+.stamp-batal { background: rgba(163,47,36,0.12); color: var(--accent); }
+.order-time { font-size: 9px; color: var(--ink-faint); }
+
+/* ---------- grid ---------- */
+.grid-2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; align-items: start; }
+
+/* ---------- stok table ---------- */
+.table-wrap { overflow-x: auto; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; min-width: 560px; }
+th {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-strong);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  white-space: nowrap;
+}
+td.mono, .mono { font-family: var(--mono); font-size: 11px; }
+tr:hover td { background: var(--paper); }
+.sticky-col { position: sticky; left: 0; background: var(--white-paper); z-index: 1; border-right: 1px solid var(--line); }
+tr:hover .sticky-col { background: var(--paper); }
+th.sticky-col { background: var(--white-paper); z-index: 2; }
+.status-chip {
+  font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 2px;
+  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+}
+.chip-green { border-color: rgba(46,107,79,0.4); color: var(--green-ink); background: rgba(46,107,79,0.06); }
+.chip-amber { border-color: rgba(176,122,46,0.45); color: #7a5218; background: rgba(176,122,46,0.06); }
+.chip-red { border-color: rgba(163,47,36,0.4); color: var(--accent); background: rgba(163,47,36,0.05); }
+.chip-gray { border-color: var(--line-strong); color: var(--ink-soft); }
+
+.stock-bar { width: 84px; height: 5px; background: var(--paper-3); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
+.stock-bar i { display: block; height: 100%; border-radius: 3px; }
+.bar-green { background: var(--green-ink); }
+.bar-amber { background: var(--accent-2); }
+.bar-red { background: var(--accent); }
+
+/* ---------- buku cabang ---------- */
+.books { display: grid; gap: 10px; }
+.book {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  border-left: 3px solid var(--line-strong);
+  transition: border-color 0.15s;
+}
+.book:hover { border-color: var(--line-strong); }
+.book.active { border-left-color: var(--green-ink); background: var(--white-paper); }
+.book-no { font-size: 10px; color: var(--accent); font-weight: 700; }
+.book-name { font-size: 12px; font-weight: 700; }
+.book-meta { font-size: 9px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.06em; }
+.book-stats { margin-left: auto; text-align: right; }
+.book-stats .v { font-family: var(--serif); font-size: 16px; font-weight: 600; }
+.book-stats .l { font-size: 8px; color: var(--ink-faint); letter-spacing: 0.1em; }
+
+/* ---------- tabs ---------- */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  padding: 7px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+}
+.tab:hover { color: var(--ink); background: var(--paper-2); }
+.tab.active { color: var(--ink); background: var(--paper-3); border-color: var(--line-strong); font-weight: 700; }
+
+/* ---------- login ---------- */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.login-card {
+  width: 100%; max-width: 400px;
+  background: var(--white-paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  box-shadow: 0 2px 0 var(--line);
+}
+.login-brand { margin-bottom: 24px; }
+.login-title { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+.login-sub { font-size: 9px; color: var(--ink-soft); letter-spacing: 0.14em; margin-top: 4px; text-transform: uppercase; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 9px; letter-spacing: 0.14em; color: var(--ink-soft); margin-bottom: 6px; text-transform: uppercase; }
+.input {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 11px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--ink-2); }
+.btn {
+  width: 100%;
+  background: var(--ink);
+  color: var(--white-paper);
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+.btn:hover { background: var(--ink-2); }
+.btn-ghost {
+  width: auto;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.btn-ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+.role-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0 18px; }
+.role-opt {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--paper);
+  transition: border-color 0.15s;
+}
+.role-opt:hover { border-color: var(--ink-soft); }
+.role-opt.active { border-color: var(--green-ink); background: rgba(46,107,79,0.06); }
+.role-opt .rn { font-size: 11px; font-weight: 700; }
+.role-opt .rd { font-size: 8px; color: var(--ink-faint); margin-top: 3px; letter-spacing: 0.04em; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .main { padding: 18px 18px 32px; }
+  .ledger-strip { grid-template-columns: repeat(2, 1fr); }
+  .page-title { font-size: 22px; }
+}
+@media (max-width: 520px) {
+  .ledger-strip { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ledger-entry { padding: 12px; }
+  .ledger-value { font-size: 20px; }
+  .order-row { grid-template-columns: 52px 1fr auto; }
+  .order-items { grid-column: 2 / 4; }
+}
+
+/* ---------- mobile bottom nav ---------- */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--paper-2);
+  border-top: 1px solid var(--line-strong);
+  z-index: 50;
+}
+.mobile-nav .mn-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.mobile-nav .mn-item.active { color: var(--ink); font-weight: 700; }
+.mobile-nav .mn-item .ic { font-size: 15px; }
+@media (max-width: 860px) {
+  .mobile-nav { display: flex; }
+  .main { padding-bottom: 76px; }
+}
+
+@media print {
+  body { background: #fff; }
+  .sidebar, .mobile-nav, .page-actions { display: none; }
+  .main { padding: 0; }
+  .sheet, .ledger-entry { background: #fff; border-color: #aaa; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="view-login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-title">KOPI SENJA</div>
+      <div class="login-sub">Buku Tunai · Sistem Operasi Kedai</div>
+    </div>
+    <div class="field">
+      <label>Emel</label>
+      <input class="input" type="email" value="owner@kopisenja.my" />
+    </div>
+    <div class="field">
+      <label>Kata Laluan</label>
+      <input class="input" type="password" value="••••••••" />
+    </div>
+    <div style="font-size:9px;color:var(--ink-soft);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase;">Log masuk sebagai</div>
+    <div class="role-options">
+      <div class="role-opt active" onclick="selectRole(this)"><div class="rn">OWNER</div><div class="rd">Semua cabang</div></div>
+      <div class="role-opt" onclick="selectRole(this)"><div class="rn">MANAGER</div><div class="rd">Cabang</div></div>
+      <div class="role-opt" onclick="selectRole(this)"><div class="rn">STAFF</div><div class="rd">Operasi</div></div>
+    </div>
+    <button class="btn" onclick="enterApp()">Log Masuk</button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="view-app" class="shell" style="display:none;">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-name">KOPI SENJA</div>
+      <div class="brand-sub">Buku Tunai · Sistem Operasi</div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">▤</span> Paparan Utama</a>
+      <a class="nav-item" onclick="showView('stok')"><span class="nav-icon">▦</span> Stok <span class="nav-badge">3</span></a>
+      <a class="nav-item" onclick="showView('cawangan')"><span class="nav-icon">▥</span> Cawangan</a>
+      <a class="nav-item" onclick="showView('laporan')"><span class="nav-icon">▨</span> Laporan</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="role-pill"><span class="role-dot"></span> OWNER · AINA</div>
+      <div style="margin-top:10px;">FOLIO 001 · 18 OGOS 2026<br>KOPI SENJA v2 DRAFT · LEDGER</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <!-- ===== DASHBOARD ===== -->
+    <div id="view-dashboard">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Paparan Utama</div>
+          <div class="page-sub">Buku Harian · Selasa 18 Ogos 2026 · 09:41</div>
+        </div>
+        <div class="page-actions">
+          <span class="folio">FOLIO 001</span>
+          <button class="btn-ghost" onclick="showView('stok')">Urus Stok</button>
+        </div>
+      </div>
+
+      <div class="ledger-strip">
+        <div class="ledger-entry" data-accent="green">
+          <div class="ledger-label">Jumlah Hari Ini</div>
+          <div class="ledger-value">RM 1,284 <span class="small">/ 3 cabang</span></div>
+          <div class="ledger-note"><span class="up">▲ 12%</span> vs semalam</div>
+        </div>
+        <div class="ledger-entry" data-accent="amber">
+          <div class="ledger-label">Order Aktif</div>
+          <div class="ledger-value">7 <span class="small">dalam queue</span></div>
+          <div class="ledger-note">2 sedang diproses</div>
+        </div>
+        <div class="ledger-entry" data-accent="ink">
+          <div class="ledger-label">Masa Purata</div>
+          <div class="ledger-value">4:32 <span class="small">minit</span></div>
+          <div class="ledger-note"><span class="up">▼ 0:18</span> lebih pantas</div>
+        </div>
+        <div class="ledger-entry" data-accent="red">
+          <div class="ledger-label">Stok Rendah</div>
+          <div class="ledger-value">3 <span class="small">item</span></div>
+          <div class="ledger-note"><span class="down">◆ perlu order</span></div>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <div class="sheet-head">
+          <div class="sheet-title"><span class="no">01</span>Order Queue · Lajur Berjalan</div>
+          <div class="sheet-meta">SEQ <b>A-014</b> · 7 order / jam</div>
+        </div>
+        <div class="order-rows">
+          <div class="order-row" data-status="baru">
+            <span class="order-id">A-014</span>
+            <span class="order-items">1x Kopi Susu · 1x Karipap <span class="order-time">· 09:41</span></span>
+            <span class="order-price">RM 11.00</span>
+            <span class="stamp stamp-baru">Baru</span>
+          </div>
+          <div class="order-row" data-status="baru">
+            <span class="order-id">A-015</span>
+            <span class="order-items">2x Latte · 1x Sandwich <span class="order-time">· 09:40</span></span>
+            <span class="order-price">RM 24.50</span>
+            <span class="stamp stamp-baru">Baru</span>
+          </div>
+          <div class="order-row" data-status="diproses">
+            <span class="order-id">A-012</span>
+            <span class="order-items">1x Americano · 1x Croissant <span class="order-time">· 09:36</span></span>
+            <span class="order-price">RM 13.00</span>
+            <span class="stamp stamp-proses">Diproses</span>
+          </div>
+          <div class="order-row" data-status="diproses">
+            <span class="order-id">A-011</span>
+            <span class="order-items">3x Ice Latte <span class="order-time">· 09:31</span></span>
+            <span class="order-price">RM 27.00</span>
+            <span class="stamp stamp-proses">Diproses</span>
+          </div>
+          <div class="order-row" data-status="siap">
+            <span class="order-id">A-010</span>
+            <span class="order-items">1x Kopi O · 1x Nasi Lemak <span class="order-time">· 09:28</span></span>
+            <span class="order-price">RM 9.50</span>
+            <span class="stamp stamp-siap">Siap</span>
+          </div>
+          <div class="order-row" data-status="batal">
+            <span class="order-id">A-008</span>
+            <span class="order-items">1x Matcha <span class="order-time">· 09:20</span></span>
+            <span class="order-price">RM 0.00</span>
+            <span class="stamp stamp-batal">Batal</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-title"><span class="no">02</span>Stok · Rendah &amp; Habis</div>
+            <div class="sheet-meta"><b>3</b> item perlu order</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sticky-col">Produk</th>
+                  <th>Cabang</th>
+                  <th>Tahap Stok</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="sticky-col"><b>Espresso Beans</b><div style="font-size:10px;color:var(--ink-faint);">SKU-001</div></td>
+                  <td class="mono">Ipoh · Jalan Tukar</td>
+                  <td><span class="stock-bar"><i class="bar-red" style="width:12%"></i></span><span class="mono">1.2 KG</span></td>
+                  <td><span class="status-chip chip-red">Habis</span></td>
+                </tr>
+                <tr>
+                  <td class="sticky-col"><b>Susu Segar</b><div style="font-size:10px;color:var(--ink-faint);">SKU-008</div></td>
+                  <td class="mono">Taiping · Jalan Kota</td>
+                  <td><span class="stock-bar"><i class="bar-amber" style="width:28%"></i></span><span class="mono">6 L</span></td>
+                  <td><span class="status-chip chip-amber">Rendah</span></td>
+                </tr>
+                <tr>
+                  <td class="sticky-col"><b>Karipap Frozen</b><div style="font-size:10px;color:var(--ink-faint);">SKU-014</div></td>
+                  <td class="mono">Ipoh · Jalan Tukar</td>
+                  <td><span class="stock-bar"><i class="bar-amber" style="width:34%"></i></span><span class="mono">2 Pack</span></td>
+                  <td><span class="status-chip chip-amber">Rendah</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-title"><span class="no">03</span>Buku Cabang</div>
+          </div>
+          <div class="books">
+            <div class="book active">
+              <span class="book-no">A</span>
+              <div>
+                <div class="book-name">Ipoh</div>
+                <div class="book-meta">Jalan Tukar · 5 kakitangan</div>
+              </div>
+              <div class="book-stats"><div class="v">RM 486</div><div class="l">hari ini</div></div>
+            </div>
+            <div class="book">
+              <span class="book-no">B</span>
+              <div>
+                <div class="book-name">Taiping</div>
+                <div class="book-meta">Jalan Kota · 3 kakitangan</div>
+              </div>
+              <div class="book-stats"><div class="v">RM 402</div><div class="l">hari ini</div></div>
+            </div>
+            <div class="book">
+              <span class="book-no">C</span>
+              <div>
+                <div class="book-name">Pulau Pangkor</div>
+                <div class="book-meta">Jeti · 2 kakitangan</div>
+              </div>
+              <div class="book-stats"><div class="v">RM 396</div><div class="l">hari ini</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STOK ===== -->
+    <div id="view-stok" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Stok</div>
+          <div class="page-sub">Buku Inventori · 21 item · 3 cabang</div>
+        </div>
+        <div class="page-actions"><button class="btn-ghost">Tambah Stok</button></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">Semua</div>
+        <div class="tab">Rendah</div>
+        <div class="tab">Habis</div>
+      </div>
+      <div class="sheet">
+        <div class="table-wrap">
+          <table style="min-width:680px;">
+            <thead>
+              <tr>
+                <th class="sticky-col">Produk</th>
+                <th>Cabang</th>
+                <th>Tahap Stok</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="sticky-col"><b>Espresso Beans</b><div style="font-size:10px;color:var(--ink-faint);">SKU-001 · 1KG Bag</div></td>
+                <td class="mono">Ipoh · Jalan Tukar</td>
+                <td><span class="stock-bar"><i class="bar-red" style="width:12%"></i></span><span class="mono">1.2 KG</span></td>
+                <td><span class="status-chip chip-red">Habis</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>Susu Segar</b><div style="font-size:10px;color:var(--ink-faint);">SKU-008 · 1L</div></td>
+                <td class="mono">Taiping · Jalan Kota</td>
+                <td><span class="stock-bar"><i class="bar-amber" style="width:28%"></i></span><span class="mono">6 L</span></td>
+                <td><span class="status-chip chip-amber">Rendah</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>Karipap Frozen</b><div style="font-size:10px;color:var(--ink-faint);">SKU-014 · 5PCS</div></td>
+                <td class="mono">Ipoh · Jalan Tukar</td>
+                <td><span class="stock-bar"><i class="bar-amber" style="width:34%"></i></span><span class="mono">2 Pack</span></td>
+                <td><span class="status-chip chip-amber">Rendah</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>Cold Brew</b><div style="font-size:10px;color:var(--ink-faint);">SKU-020 · 500ML</div></td>
+                <td class="mono">Pulau Pangkor · Jeti</td>
+                <td><span class="stock-bar"><i class="bar-green" style="width:72%"></i></span><span class="mono">14 Botol</span></td>
+                <td><span class="status-chip chip-green">Cukup</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>Latte Cup</b><div style="font-size:10px;color:var(--ink-faint);">SKU-022 · 12OZ</div></td>
+                <td class="mono">Ipoh · Jalan Tukar</td>
+                <td><span class="stock-bar"><i class="bar-green" style="width:88%"></i></span><span class="mono">180 Unit</span></td>
+                <td><span class="status-chip chip-green">Cukup</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CAWANGAN ===== -->
+    <div id="view-cawangan" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Cawangan</div>
+          <div class="page-sub">Buku Cabang · A / B / C</div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="books" style="max-width:520px;">
+          <div class="book active">
+            <span class="book-no">A</span>
+            <div>
+              <div class="book-name">Ipoh</div>
+              <div class="book-meta">Jalan Tukar · 5 kakitangan</div>
+            </div>
+            <div class="book-stats"><div class="v">RM 486</div><div class="l">hari ini</div></div>
+          </div>
+          <div class="book">
+            <span class="book-no">B</span>
+            <div>
+              <div class="book-name">Taiping</div>
+              <div class="book-meta">Jalan Kota · 3 kakitangan</div>
+            </div>
+            <div class="book-stats"><div class="v">RM 402</div><div class="l">hari ini</div></div>
+          </div>
+          <div class="book">
+            <span class="book-no">C</span>
+            <div>
+              <div class="book-name">Pulau Pangkor</div>
+              <div class="book-meta">Jeti · 2 kakitangan</div>
+            </div>
+            <div class="book-stats"><div class="v">RM 396</div><div class="l">hari ini</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LAPORAN ===== -->
+    <div id="view-laporan" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Laporan</div>
+          <div class="page-sub">Rekod 7 Hari · Semua Cabang</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-title"><span class="no">04</span>Jualan · 7 Hari</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:10px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 98</div>
+              <div style="width:70%;background:var(--paper-3);border:1px solid var(--line);border-radius:3px 3px 0 0;height:42px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">ISN</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 112</div>
+              <div style="width:70%;background:var(--paper-3);border:1px solid var(--line);border-radius:3px 3px 0 0;height:54px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">SEL</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 126</div>
+              <div style="width:70%;background:var(--paper-3);border:1px solid var(--line);border-radius:3px 3px 0 0;height:62px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">RAB</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 141</div>
+              <div style="width:70%;background:var(--paper-3);border:1px solid var(--line);border-radius:3px 3px 0 0;height:70px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">KHA</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 168</div>
+              <div style="width:70%;background:rgba(46,107,79,0.25);border:1px solid rgba(46,107,79,0.4);border-radius:3px 3px 0 0;height:84px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">JUM</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 187</div>
+              <div style="width:70%;background:rgba(46,107,79,0.25);border:1px solid rgba(46,107,79,0.4);border-radius:3px 3px 0 0;height:94px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">SAB</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 203</div>
+              <div style="width:70%;background:var(--green-ink);border-radius:3px 3px 0 0;height:102px;"></div>
+              <div style="font-size:9px;color:var(--ink-soft);">AHAD</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-title"><span class="no">05</span>Teratas · Produk</div>
+          </div>
+          <div style="display:grid;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+              <span style="color:var(--accent);">01</span><span style="flex:1;">Kopi Susu</span><span style="color:var(--ink-soft);">212</span><b>RM 2,332</b>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+              <span style="color:var(--ink-faint);">02</span><span style="flex:1;">Latte</span><span style="color:var(--ink-soft);">158</span><b>RM 2,134</b>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+              <span style="color:var(--ink-faint);">03</span><span style="flex:1;">Karipap</span><span style="color:var(--ink-soft);">134</span><b>RM 1,072</b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mn-item active" onclick="showView('dashboard')"><span class="ic">▤</span>UTAMA</a>
+  <a class="mn-item" onclick="showView('stok')"><span class="ic">▦</span>STOK</a>
+  <a class="mn-item" onclick="showView('cawangan')"><span class="ic">▥</span>CAWANGAN</a>
+  <a class="mn-item" onclick="showView('laporan')"><span class="ic">▨</span>LAPORAN</a>
+</nav>
+
+<script>
+function selectRole(el) {
+  document.querySelectorAll('.role-opt').forEach(function (o) { o.classList.remove('active'); });
+  el.classList.add('active');
+}
+function enterApp() {
+  document.getElementById('view-login').style.display = 'none';
+  document.getElementById('view-app').style.display = 'flex';
+}
+function showView(name) {
+  ['dashboard', 'stok', 'cawangan', 'laporan'].forEach(function (v) {
+    document.getElementById('view-' + v).style.display = v === name ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-item, .mn-item').forEach(function (n) {
+    var match = n.getAttribute('onclick') || '';
+    n.classList.toggle('active', match.indexOf("'" + name + "'") > -1);
+  });
+}
+</script>
+</body>
+</html>
