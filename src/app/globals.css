@@ -223,7 +223,8 @@ body {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-soft);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .table-wrap table {
   width: 100%;
@@ -250,6 +251,21 @@ body {
   border-bottom: none;
 }
 .table-wrap tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+/* Sticky first column (mobile horizontal scroll affordance) */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-line);
+}
+.table-wrap thead .sticky-col {
+  z-index: 2;
+}
+.table-wrap tbody tr:hover .sticky-col {
   background: var(--color-surface-2);
 }
 

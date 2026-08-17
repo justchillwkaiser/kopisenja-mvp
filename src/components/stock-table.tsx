@@ -41,10 +41,10 @@ export function StockTable({ items }: { items: StockItem[] }) {
       </div>
 
       <div className="table-wrap overflow-x-auto">
-        <table className="min-w-[640px]">
+        <table className="min-w-[680px]">
           <thead>
             <tr>
-              <th>Produk</th>
+              <th className="sticky-col">Produk</th>
               <th>Cawangan</th>
               <th>Tahap Stok</th>
               <th>Status</th>
@@ -57,7 +57,7 @@ export function StockTable({ items }: { items: StockItem[] }) {
                 item.status === "OK" ? "bg-ok" : item.status === "RENDAH" ? "bg-warn" : "bg-bad";
               return (
                 <tr key={item.id}>
-                  <td>
+                  <td className="sticky-col whitespace-nowrap">
                     <div className="flex items-center gap-2.5">
                       <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-surface-2 text-taupe">
                         <Package size={15} />
@@ -68,8 +68,8 @@ export function StockTable({ items }: { items: StockItem[] }) {
                       </div>
                     </div>
                   </td>
-                  <td>{item.outletName}</td>
-                  <td>
+                  <td className="whitespace-nowrap">{item.outletName}</td>
+                  <td className="whitespace-nowrap">
                     <div className="flex items-center gap-2.5">
                       <div className="h-2 w-[110px] overflow-hidden rounded-full bg-surface-2">
                         <div className={`h-full rounded-full ${fillClass}`} style={{ width: `${Math.max(pct, 4)}%` }} />
@@ -79,7 +79,7 @@ export function StockTable({ items }: { items: StockItem[] }) {
                       </span>
                     </div>
                   </td>
-                  <td>
+                  <td className="whitespace-nowrap">
                     <span className={`badge ${item.status === "OK" ? "badge-ok" : item.status === "RENDAH" ? "badge-warn" : "badge-bad"}`}>
                       {item.status}
                     </span>
