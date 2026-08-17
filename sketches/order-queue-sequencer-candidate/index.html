@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KOPI SENJA · Order Queue Sequencer · draft design</title>
+<!--
+  THESIS: Dashboard operasi F&B yang berdegup seperti mesin rhythm. Order queue sebagai step sequencer - 16 slot rail dengan chase light, status boleh dibaca dari jauh (peripheral glance), bukan senarai pasif. Menolak default dashboard SaaS generic.
+  OWN-WORLD: Charcoal panel ground (panel drum machine), step keys warna status (hijau BARU, amber DIPROSES, putih SELESAI, merah BATAL), lit LED sebagai satu-satunya glow, silkscreen white mono labels, tempo readout 7-seg.
+  STORY: Pengunjung faham kedai hidup - order bergerak, stok bernafas, jualan berdegup. Status tidak perlu dibaca, boleh dilihat.
+  FIRST VIEWPORT: Tempo readout (jualan/order/avg) atas; Order Queue Rail 16 slot + chase light tengah; Stok status + Cawangan pattern banks bawah.
+  FORM: Order Queue Sequencer (fusion drum-machine step row ke order rail), position 4 grounded list, seed 9e10abf6.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --panel: #191c21;
+  --panel-2: #21252b;
+  --panel-3: #2a2f37;
+  --line: #333a44;
+  --line-soft: #282e36;
+  --ink: #e8ebee;
+  --ink-dim: #9aa3ad;
+  --ink-faint: #6b7480;
+  --green: #3ecf6e;
+  --green-dim: #2a7d49;
+  --amber: #f5a623;
+  --amber-dim: #8a5a12;
+  --red: #e5484d;
+  --red-dim: #7d2a2d;
+  --white-k: #dfe3e7;
+  --accent: #3ecf6e;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #101215;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ---------- shell ---------- */
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 16px;
+}
+.brand-mark {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--green), #1e5f3a);
+  display: grid; place-items: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  color: #0b0d10;
+}
+.brand-name { font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.08em; }
+.brand-sub { font-family: var(--mono); font-size: 9px; color: var(--ink-faint); letter-spacing: 0.14em; margin-top: 2px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--ink-dim);
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover { background: var(--panel-2); color: var(--ink); }
+.nav-item.active { background: var(--panel-2); color: var(--ink); }
+.nav-item.active::before { content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--green); margin-left: -10px; }
+.nav-icon { width: 16px; text-align: center; font-size: 14px; opacity: 0.9; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--green-dim);
+  color: #bff5d0;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  line-height: 1.7;
+}
+.role-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--ink);
+}
+.role-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+.main { flex: 1; min-width: 0; padding: 24px 28px 40px; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.page-title { font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: 0.04em; }
+.page-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); letter-spacing: 0.14em; margin-top: 5px; }
+.page-actions { display: flex; gap: 10px; }
+
+/* ---------- tempo readout (KPI) ---------- */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.kpi {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::after {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 2px;
+  background: var(--kpi-accent, var(--line));
+  opacity: 0.8;
+}
+.kpi-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.kpi-value {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.kpi-unit { font-size: 11px; color: var(--ink-dim); font-weight: 400; }
+.kpi-trend {
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-top: 6px;
+  color: var(--kpi-trend, var(--ink-faint));
+}
+.kpi[data-accent="green"] { --kpi-accent: var(--green); }
+.kpi[data-accent="amber"] { --kpi-accent: var(--amber); }
+.kpi[data-accent="white"] { --kpi-accent: var(--white-k); }
+.kpi[data-accent="red"] { --kpi-accent: var(--red); }
+.tick { color: var(--green); }
+.tick-down { color: var(--red); }
+
+/* ---------- order queue sequencer ---------- */
+.queue-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+}
+.panel-title { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+.panel-title .led { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 8px; box-shadow: 0 0 8px var(--green); vertical-align: middle; animation: blink 1.6s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.seq-meta { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em; }
+.seq-meta b { color: var(--ink-dim); }
+
+.seq-rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(16, minmax(64px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.seq-rail::-webkit-scrollbar { height: 6px; }
+.seq-rail::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 3px; }
+.seq-slot {
+  position: relative;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  min-height: 96px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.seq-slot:hover { border-color: var(--ink-faint); transform: translateY(-1px); }
+.seq-slot.empty { opacity: 0.45; border-style: dashed; }
+.seq-slot .slot-top { display: flex; align-items: center; justify-content: space-between; }
+.slot-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--ink-dim); }
+.slot-time { font-family: var(--mono); font-size: 9px; color: var(--ink-faint); }
+.slot-items { font-family: var(--mono); font-size: 11px; color: var(--ink); margin-top: 8px; line-height: 1.5; }
+.slot-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.slot-price { font-family: var(--mono); font-size: 11px; font-weight: 700; }
+.slot-status {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #0b0d10;
+  font-weight: 700;
+}
+.seq-slot[data-status="baru"] .slot-status { background: var(--green); }
+.seq-slot[data-status="diproses"] .slot-status { background: var(--amber); }
+.seq-slot[data-status="siap"] .slot-status { background: var(--white-k); color: #1a1d21; }
+.seq-slot[data-status="batal"] .slot-status { background: var(--red); }
+.seq-slot[data-status="baru"] { border-color: rgba(62,207,110,0.4); }
+.seq-slot[data-status="diproses"] { border-color: rgba(245,166,35,0.4); }
+
+/* chase light */
+.chase {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 34px;
+  pointer-events: none;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent, rgba(62,207,110,0.08), rgba(62,207,110,0.18), transparent);
+  border-left: 1px solid rgba(62,207,110,0.5);
+  border-right: 1px solid rgba(62,207,110,0.5);
+  animation: chase 9s linear infinite;
+  opacity: 0.7;
+}
+@keyframes chase {
+  0% { left: -40px; }
+  100% { left: calc(100% + 40px); }
+}
+
+/* status legend */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ink-dim); }
+.legend-key { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ---------- grid bawah: stok + cawangan ---------- */
+.grid-2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; align-items: start; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px;
+}
+.table-wrap { overflow-x: auto; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; min-width: 560px; }
+th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  white-space: nowrap;
+}
+td.mono, .mono { font-family: var(--mono); font-size: 11px; }
+tr:hover td { background: var(--panel-2); }
+.sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 1; border-right: 1px solid var(--line-soft); }
+tr:hover .sticky-col { background: var(--panel-2); }
+th.sticky-col { background: var(--panel); z-index: 2; }
+.status-chip {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.08em;
+}
+.chip-green { background: rgba(62,207,110,0.14); color: #7ee3a3; }
+.chip-amber { background: rgba(245,166,35,0.14); color: #f7c56a; }
+.chip-red { background: rgba(229,72,77,0.14); color: #f08a8d; }
+.chip-gray { background: rgba(155,163,173,0.14); color: var(--ink-dim); }
+
+/* stock bar */
+.stock-bar { width: 84px; height: 5px; background: var(--panel-3); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
+.stock-bar i { display: block; height: 100%; border-radius: 3px; }
+.bar-green { background: var(--green); }
+.bar-amber { background: var(--amber); }
+.bar-red { background: var(--red); }
+
+/* cawangan (pattern banks) */
+.banks { display: grid; gap: 10px; }
+.bank {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.bank:hover { border-color: var(--ink-faint); }
+.bank.active { border-color: var(--green); background: rgba(62,207,110,0.06); }
+.bank-led { width: 9px; height: 9px; border-radius: 50%; background: var(--panel-3); }
+.bank.active .bank-led { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.bank-name { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+.bank-meta { font-family: var(--mono); font-size: 9px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.08em; }
+.bank-stats { margin-left: auto; text-align: right; }
+.bank-stats .v { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+.bank-stats .l { font-family: var(--mono); font-size: 8px; color: var(--ink-faint); letter-spacing: 0.1em; }
+
+/* ---------- tabs ---------- */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.tab:hover { color: var(--ink); background: var(--panel-2); }
+.tab.active { color: var(--ink); background: var(--panel-3); border-color: var(--line); }
+
+/* ---------- login ---------- */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.login-card {
+  width: 100%; max-width: 400px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 30px;
+}
+.login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.login-title { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+.login-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-top: 4px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-dim); margin-bottom: 6px; }
+.input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 11px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--green); }
+.btn {
+  width: 100%;
+  background: var(--green);
+  color: #0b0d10;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn-ghost {
+  width: auto;
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+.role-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0 18px; }
+.role-opt {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--panel-2);
+  transition: border-color 0.15s, background 0.15s;
+}
+.role-opt:hover { border-color: var(--ink-faint); }
+.role-opt.active { border-color: var(--green); background: rgba(62,207,110,0.06); }
+.role-opt .rn { font-family: var(--mono); font-size: 11px; font-weight: 700; }
+.role-opt .rd { font-family: var(--mono); font-size: 8px; color: var(--ink-faint); margin-top: 3px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .main { padding: 16px 16px 32px; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .kpi-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi { padding: 12px; }
+  .kpi-value { font-size: 20px; }
+  .page-title { font-size: 16px; }
+}
+
+/* ---------- mobile bottom nav ---------- */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  z-index: 50;
+}
+.mobile-nav .mn-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.mobile-nav .mn-item.active { color: var(--green); }
+.mobile-nav .mn-item .ic { font-size: 16px; }
+@media (max-width: 860px) {
+  .mobile-nav { display: flex; }
+  .main { padding-bottom: 76px; }
+}
+
+@media print {
+  body { background: #fff; color: #111; }
+  .sidebar, .mobile-nav, .page-actions { display: none; }
+  .main { padding: 0; }
+  .panel, .kpi, .queue-panel { background: #fff; border-color: #ccc; color: #111; }
+  .kpi-value, .panel-title, .slot-id, .slot-items, td { color: #111; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="view-login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">KS</div>
+      <div>
+        <div class="login-title">KOPI SENJA</div>
+        <div class="login-sub">SISTEM OPERASI KEDAI</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>EMEL</label>
+      <input class="input" type="email" value="owner@kopisenja.my" />
+    </div>
+    <div class="field">
+      <label>KATA LALUAN</label>
+      <input class="input" type="password" value="••••••••" />
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:0.1em;margin-bottom:6px;">LOG MASUK SEBAGAI</div>
+    <div class="role-options">
+      <div class="role-opt active" onclick="selectRole(this)"><div class="rn">OWNER</div><div class="rd">SEMUA CAWANGAN</div></div>
+      <div class="role-opt" onclick="selectRole(this)"><div class="rn">MANAGER</div><div class="rd">CAWANGAN</div></div>
+      <div class="role-opt" onclick="selectRole(this)"><div class="rn">STAFF</div><div class="rd">OPERASI</div></div>
+    </div>
+    <button class="btn" onclick="enterApp()">LOG MASUK</button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="view-app" class="shell" style="display:none;">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">KS</div>
+      <div>
+        <div class="brand-name">KOPI SENJA</div>
+        <div class="brand-sub">SISTEM OPERASI</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">◈</span> Paparan Utama</a>
+      <a class="nav-item" onclick="showView('stok')"><span class="nav-icon">▤</span> Stok <span class="nav-badge">3</span></a>
+      <a class="nav-item" onclick="showView('cawangan')"><span class="nav-icon">▦</span> Cawangan</a>
+      <a class="nav-item" onclick="showView('laporan')"><span class="nav-icon">▥</span> Laporan</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="role-pill"><span class="role-dot"></span> OWNER · AINA</div>
+      <div style="margin-top:10px;">KOPI SENJA v2 DRAFT<br>ORDER QUEUE SEQUENCER</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <!-- ===== DASHBOARD ===== -->
+    <div id="view-dashboard">
+      <div class="page-head">
+        <div>
+          <div class="page-title">PAPARAN UTAMA</div>
+          <div class="page-sub">MASA NYATA · CHASE 09:41:22</div>
+        </div>
+        <div class="page-actions"><button class="btn-ghost" onclick="showView('stok')">URUS STOK</button></div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi" data-accent="green">
+          <div class="kpi-label">Jualan Hari Ini</div>
+          <div class="kpi-value">RM 1,284<span class="kpi-unit">/ 3 CAWANGAN</span></div>
+          <div class="kpi-trend">▲ 12% vs semalam</div>
+        </div>
+        <div class="kpi" data-accent="amber">
+          <div class="kpi-label">Order Aktif</div>
+          <div class="kpi-value">7<span class="kpi-unit">DALAM RAIL</span></div>
+          <div class="kpi-trend">◆ 2 DIPROSES</div>
+        </div>
+        <div class="kpi" data-accent="white">
+          <div class="kpi-label">Masa Purata</div>
+          <div class="kpi-value">4:32<span class="kpi-unit">MINIT</span></div>
+          <div class="kpi-trend">▼ 0:18 vs semalam</div>
+        </div>
+        <div class="kpi" data-accent="red">
+          <div class="kpi-label">Stok Rendah</div>
+          <div class="kpi-value">3<span class="kpi-unit">ITEM</span></div>
+          <div class="kpi-trend" style="color:var(--red)">◆ PERLU ORDER</div>
+        </div>
+      </div>
+
+      <div class="queue-panel">
+        <div class="panel-head">
+          <div class="panel-title"><span class="led"></span>ORDER QUEUE · RAIL 16</div>
+          <div class="seq-meta">SEQ: <b>A-014</b> &nbsp;·&nbsp; BPM <b>7</b> ORDER / JAM</div>
+        </div>
+        <div class="seq-rail" id="rail">
+          <div class="chase"></div>
+          <div class="seq-slot" data-status="baru">
+            <div class="slot-top"><span class="slot-id">A-014</span><span class="slot-time">09:41</span></div>
+            <div class="slot-items">1x KOPI SUSU<br>1x KARIPAP</div>
+            <div class="slot-foot"><span class="slot-price">RM 11.00</span><span class="slot-status">BARU</span></div>
+          </div>
+          <div class="seq-slot" data-status="baru">
+            <div class="slot-top"><span class="slot-id">A-015</span><span class="slot-time">09:40</span></div>
+            <div class="slot-items">2x LATTE<br>1x SANDWICH</div>
+            <div class="slot-foot"><span class="slot-price">RM 24.50</span><span class="slot-status">BARU</span></div>
+          </div>
+          <div class="seq-slot" data-status="diproses">
+            <div class="slot-top"><span class="slot-id">A-012</span><span class="slot-time">09:36</span></div>
+            <div class="slot-items">1x AMERICANO<br>1x CROISSANT</div>
+            <div class="slot-foot"><span class="slot-price">RM 13.00</span><span class="slot-status">DIPROSES</span></div>
+          </div>
+          <div class="seq-slot" data-status="diproses">
+            <div class="slot-top"><span class="slot-id">A-011</span><span class="slot-time">09:31</span></div>
+            <div class="slot-items">3x ICE LATTE</div>
+            <div class="slot-foot"><span class="slot-price">RM 27.00</span><span class="slot-status">DIPROSES</span></div>
+          </div>
+          <div class="seq-slot" data-status="siap">
+            <div class="slot-top"><span class="slot-id">A-010</span><span class="slot-time">09:28</span></div>
+            <div class="slot-items">1x KOPI O<br>1x NASI LEMAK</div>
+            <div class="slot-foot"><span class="slot-price">RM 9.50</span><span class="slot-status">SIAP</span></div>
+          </div>
+          <div class="seq-slot" data-status="siap">
+            <div class="slot-top"><span class="slot-id">A-009</span><span class="slot-time">09:25</span></div>
+            <div class="slot-items">2x CHAI LATTE</div>
+            <div class="slot-foot"><span class="slot-price">RM 22.00</span><span class="slot-status">SIAP</span></div>
+          </div>
+          <div class="seq-slot" data-status="batal">
+            <div class="slot-top"><span class="slot-id">A-008</span><span class="slot-time">09:20</span></div>
+            <div class="slot-items">1x MATCHA</div>
+            <div class="slot-foot"><span class="slot-price">RM 0.00</span><span class="slot-status">BATAL</span></div>
+          </div>
+          <div class="seq-slot empty">
+            <div class="slot-top"><span class="slot-id">-</span><span class="slot-time">-</span></div>
+            <div class="slot-items">KOSONG</div>
+            <div class="slot-foot"><span class="slot-price">-</span><span class="slot-status" style="background:var(--panel-3);color:var(--ink-faint);">-</span></div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-key" style="background:var(--green);"></span> BARU</div>
+          <div class="legend-item"><span class="legend-key" style="background:var(--amber);"></span> DIPROSES</div>
+          <div class="legend-item"><span class="legend-key" style="background:var(--white-k);"></span> SIAP</div>
+          <div class="legend-item"><span class="legend-key" style="background:var(--red);"></span> BATAL</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">STOK · RENDAH &amp; HABIS</div>
+            <div class="seq-meta"><b>3</b> ITEM PERLU ORDER</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sticky-col">PRODUK</th>
+                  <th>CAWANGAN</th>
+                  <th>TAHAP STOK</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="sticky-col"><b>ESPRESSO BEANS</b><div style="font-size:10px;color:var(--ink-faint);">SKU-001</div></td>
+                  <td class="mono">IPOH · JALAN TUKAR</td>
+                  <td><span class="stock-bar"><i class="bar-red" style="width:12%"></i></span><span class="mono">1.2 KG</span></td>
+                  <td><span class="status-chip chip-red">HABIS</span></td>
+                </tr>
+                <tr>
+                  <td class="sticky-col"><b>SUSU SEGAR</b><div style="font-size:10px;color:var(--ink-faint);">SKU-008</div></td>
+                  <td class="mono">TAIPING · JALAN KOTA</td>
+                  <td><span class="stock-bar"><i class="bar-amber" style="width:28%"></i></span><span class="mono">6 L</span></td>
+                  <td><span class="status-chip chip-amber">RENDAH</span></td>
+                </tr>
+                <tr>
+                  <td class="sticky-col"><b>KARIPAP FROZEN</b><div style="font-size:10px;color:var(--ink-faint);">SKU-014</div></td>
+                  <td class="mono">IPOH · JALAN TUKAR</td>
+                  <td><span class="stock-bar"><i class="bar-amber" style="width:34%"></i></span><span class="mono">2 PACK</span></td>
+                  <td><span class="status-chip chip-amber">RENDAH</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">CAWANGAN · PATTERN BANKS</div>
+          </div>
+          <div class="banks">
+            <div class="bank active">
+              <span class="bank-led"></span>
+              <div>
+                <div class="bank-name">BANK A · IPOH</div>
+                <div class="bank-meta">JALAN TUKAR · 5 KAKITANGAN</div>
+              </div>
+              <div class="bank-stats"><div class="v">RM 486</div><div class="l">HARI INI</div></div>
+            </div>
+            <div class="bank">
+              <span class="bank-led"></span>
+              <div>
+                <div class="bank-name">BANK B · TAIPING</div>
+                <div class="bank-meta">JALAN KOTA · 3 KAKITANGAN</div>
+              </div>
+              <div class="bank-stats"><div class="v">RM 402</div><div class="l">HARI INI</div></div>
+            </div>
+            <div class="bank">
+              <span class="bank-led"></span>
+              <div>
+                <div class="bank-name">BANK C · PULAU PANGKOR</div>
+                <div class="bank-meta">JETI · 2 KAKITANGAN</div>
+              </div>
+              <div class="bank-stats"><div class="v">RM 396</div><div class="l">HARI INI</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STOK ===== -->
+    <div id="view-stok" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">STOK</div>
+          <div class="page-sub">SENARAI INVENTORI · 21 ITEM · 3 CAWANGAN</div>
+        </div>
+        <div class="page-actions"><button class="btn-ghost">TAMBAH STOK</button></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">SEMUA</div>
+        <div class="tab">RENDAH</div>
+        <div class="tab">HABIS</div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table style="min-width:680px;">
+            <thead>
+              <tr>
+                <th class="sticky-col">PRODUK</th>
+                <th>CAWANGAN</th>
+                <th>TAHAP STOK</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="sticky-col"><b>ESPRESSO BEANS</b><div style="font-size:10px;color:var(--ink-faint);">SKU-001 · 1KG BAG</div></td>
+                <td class="mono">IPOH · JALAN TUKAR</td>
+                <td><span class="stock-bar"><i class="bar-red" style="width:12%"></i></span><span class="mono">1.2 KG</span></td>
+                <td><span class="status-chip chip-red">HABIS</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>SUSU SEGAR</b><div style="font-size:10px;color:var(--ink-faint);">SKU-008 · 1L</div></td>
+                <td class="mono">TAIPING · JALAN KOTA</td>
+                <td><span class="stock-bar"><i class="bar-amber" style="width:28%"></i></span><span class="mono">6 L</span></td>
+                <td><span class="status-chip chip-amber">RENDAH</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>KARIPAP FROZEN</b><div style="font-size:10px;color:var(--ink-faint);">SKU-014 · 5PCS</div></td>
+                <td class="mono">IPOH · JALAN TUKAR</td>
+                <td><span class="stock-bar"><i class="bar-amber" style="width:34%"></i></span><span class="mono">2 PACK</span></td>
+                <td><span class="status-chip chip-amber">RENDAH</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>COLD BREW</b><div style="font-size:10px;color:var(--ink-faint);">SKU-020 · 500ML</div></td>
+                <td class="mono">PULAU PANGKOR · JETI</td>
+                <td><span class="stock-bar"><i class="bar-green" style="width:72%"></i></span><span class="mono">14 BOTOL</span></td>
+                <td><span class="status-chip chip-green">CUKUP</span></td>
+              </tr>
+              <tr>
+                <td class="sticky-col"><b>LATTE CUP</b><div style="font-size:10px;color:var(--ink-faint);">SKU-022 · 12OZ</div></td>
+                <td class="mono">IPOH · JALAN TUKAR</td>
+                <td><span class="stock-bar"><i class="bar-green" style="width:88%"></i></span><span class="mono">180 UNIT</span></td>
+                <td><span class="status-chip chip-green">CUKUP</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CAWANGAN ===== -->
+    <div id="view-cawangan" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">CAWANGAN</div>
+          <div class="page-sub">3 BANK · PATTERN A / B / C</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="banks" style="max-width:520px;">
+          <div class="bank active">
+            <span class="bank-led"></span>
+            <div>
+              <div class="bank-name">BANK A · IPOH</div>
+              <div class="bank-meta">JALAN TUKAR · 5 KAKITANGAN</div>
+            </div>
+            <div class="bank-stats"><div class="v">RM 486</div><div class="l">HARI INI</div></div>
+          </div>
+          <div class="bank">
+            <span class="bank-led"></span>
+            <div>
+              <div class="bank-name">BANK B · TAIPING</div>
+              <div class="bank-meta">JALAN KOTA · 3 KAKITANGAN</div>
+            </div>
+            <div class="bank-stats"><div class="v">RM 402</div><div class="l">HARI INI</div></div>
+          </div>
+          <div class="bank">
+            <span class="bank-led"></span>
+            <div>
+              <div class="bank-name">BANK C · PULAU PANGKOR</div>
+              <div class="bank-meta">JETI · 2 KAKITANGAN</div>
+            </div>
+            <div class="bank-stats"><div class="v">RM 396</div><div class="l">HARI INI</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LAPORAN ===== -->
+    <div id="view-laporan" style="display:none;">
+      <div class="page-head">
+        <div>
+          <div class="page-title">LAPORAN</div>
+          <div class="page-sub">TEMPOH 7 HARI · SEMUA CAWANGAN</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">JUALAN · 7 HARI</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:10px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 98</div>
+              <div style="width:70%;background:var(--panel-3);border-radius:4px 4px 0 0;height:42px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">ISN</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 112</div>
+              <div style="width:70%;background:var(--panel-3);border-radius:4px 4px 0 0;height:54px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">SEL</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 126</div>
+              <div style="width:70%;background:var(--panel-3);border-radius:4px 4px 0 0;height:62px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RAB</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 141</div>
+              <div style="width:70%;background:var(--panel-3);border-radius:4px 4px 0 0;height:70px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">KHA</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 168</div>
+              <div style="width:70%;background:var(--green-dim);border-radius:4px 4px 0 0;height:84px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">JUM</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 187</div>
+              <div style="width:70%;background:var(--green-dim);border-radius:4px 4px 0 0;height:94px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">SAB</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">RM 203</div>
+              <div style="width:70%;background:var(--green);border-radius:4px 4px 0 0;height:102px;"></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);">AHAD</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">TERATAS · PRODUK</div>
+          </div>
+          <div style="display:grid;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;">
+              <span style="color:var(--green);">01</span><span style="flex:1;">KOPI SUSU</span><span style="color:var(--ink-dim);">212</span><b>RM 2,332</b>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;">
+              <span style="color:var(--ink-faint);">02</span><span style="flex:1;">LATTE</span><span style="color:var(--ink-dim);">158</span><b>RM 2,134</b>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;">
+              <span style="color:var(--ink-faint);">03</span><span style="flex:1;">KARIPAP</span><span style="color:var(--ink-dim);">134</span><b>RM 1,072</b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mn-item active" onclick="showView('dashboard')"><span class="ic">◈</span>UTAMA</a>
+  <a class="mn-item" onclick="showView('stok')"><span class="ic">▤</span>STOK</a>
+  <a class="mn-item" onclick="showView('cawangan')"><span class="ic">▦</span>CAWANGAN</a>
+  <a class="mn-item" onclick="showView('laporan')"><span class="ic">▥</span>LAPORAN</a>
+</nav>
+
+<script>
+function selectRole(el) {
+  document.querySelectorAll('.role-opt').forEach(function (o) { o.classList.remove('active'); });
+  el.classList.add('active');
+}
+function enterApp() {
+  document.getElementById('view-login').style.display = 'none';
+  document.getElementById('view-app').style.display = 'flex';
+}
+function showView(name) {
+  ['dashboard', 'stok', 'cawangan', 'laporan'].forEach(function (v) {
+    document.getElementById('view-' + v).style.display = v === name ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-item, .mn-item').forEach(function (n) {
+    var match = n.getAttribute('onclick') || '';
+    n.classList.toggle('active', match.indexOf("'" + name + "'") > -1);
+  });
+}
+</script>
+</body>
+</html>
