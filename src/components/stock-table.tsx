@@ -35,12 +35,17 @@ export function StockTable({ items }: { items: StockItem[] }) {
             }`}
           >
             {tab.label}
-            <span className="ml-1.5 font-mono text-[10px] opacity-70">{counts[tab.key]}</span>
+            <span className="ml-1.5 font-mono text-[10px] opacity-70">
+              {counts[tab.key]}
+            </span>
           </button>
         ))}
       </div>
+      <p className="sr-only" aria-live="polite">
+        {visible.length} item ditunjuk
+      </p>
 
-      <div className="table-wrap overflow-x-auto">
+      <div className="table-wrap overflow-x-auto" aria-live="polite">
         <table className="min-w-[680px]">
           <thead>
             <tr>

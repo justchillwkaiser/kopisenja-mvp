@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revamp 2026-08 — Pilih Arah — KOPI SENJA</title>
+<style>
+  :root { --ink:#2b211a; --paper:#f7f2ec; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: var(--paper); color: var(--ink); padding: 32px 20px 60px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #6f6257; font-size: 14px; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; max-width: 1280px; margin: 0 auto; }
+  .card { background: #fffdf9; border: 1px solid #e7ddd1; border-radius: 18px; overflow: hidden; }
+  .card iframe { width: 100%; height: 460px; border: 0; display: block; }
+  .meta { padding: 14px 18px; border-top: 1px solid #e7ddd1; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .meta h2 { font-size: 16px; }
+  .meta p { font-size: 12.5px; color: #6f6257; }
+  .pill { font-size: 11px; font-family: ui-monospace, monospace; background: #f0e2d6; color: #7a4a2b; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+</style>
+</head>
+<body>
+  <h1>KOPI SENJA — 3 Arah Revamp (18 Ogos 2026)</h1>
+  <p class="sub">Logik frontend (auth, routes, services, data) 100% kekal. Yang berubah: dunia visual. Pilih satu — klik terus dalam iframe untuk rasa interaksi.</p>
+  <div class="grid">
+    <div class="card">
+      <iframe src="dir-a-terminal-kopi.html" title="Arah A"></iframe>
+      <div class="meta"><h2>A — Terminal Kopi</h2><p>Dark-first ops console. Amber/kopi pada navy gelap. Density tinggi, fokus baca data.</p><span class="pill">mission-control</span></div>
+    </div>
+    <div class="card">
+      <iframe src="dir-b-kedai-kaca.html" title="Arah B"></iframe>
+      <div class="meta"><h2>B — Kedai Kaca</h2><p>Light refined. Kecil-kecil precise, border halus, aksen tunggal. Paling selamat untuk semua role.</p><span class="pill">linear-app</span></div>
+    </div>
+    <div class="card">
+      <iframe src="dir-c-instrumen.html" title="Arah C"></iframe>
+      <div class="2meta meta"><h2>C — Instrumen Kopi</h2><p>Dark berkualiti tinggi. Depth berlapis, gradient halus. Paling "wow" tapi paling berisiko.</p><span class="pill">raycast</span></div>
+    </div>
+  </div>
+</body>
+</html>

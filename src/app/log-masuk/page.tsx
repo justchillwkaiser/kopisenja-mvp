@@ -61,6 +61,8 @@ export default function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
+              inputMode="email"
+              spellCheck={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@kopisenja.my"
@@ -78,10 +80,14 @@ export default function LoginPage() {
               placeholder="Kata laluan"
               required
             />
-            {error && <p className="text-[12.5px] text-bad">{error}</p>}
+            {error && (
+              <p role="alert" className="text-[12.5px] text-bad">
+                {error}
+              </p>
+            )}
           </div>
           <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Memproses..." : "Log Masuk"}
+            {busy ? "Memproses…" : "Log Masuk"}
             {!busy && <ArrowRight size={16} />}
           </button>
         </form>

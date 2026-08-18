@@ -8,7 +8,6 @@ import {
   Package,
   Storefront,
   FileText,
-  List,
   SignOut,
 } from "@phosphor-icons/react";
 import { BrandMark } from "@/components/brand-mark";
@@ -39,7 +38,6 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const initials =
@@ -64,46 +62,53 @@ export function AppShell({
 
   return (
     <>
-      {/* Sidebar desktop */}
-      <aside className="sidebar z-30">
-        <div className="border-b border-line pb-4">
-          <BrandMark />
-        </div>
-        <nav className="mt-4 flex flex-1 flex-col gap-1">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-accent-soft text-accent font-semibold"
-                    : "text-taupe hover:bg-surface-2 hover:text-espresso"
-                }`}
-              >
-                <Icon size={19} />
-                {item.label}
-                {item.href === "/stok" && lowStockCount > 0 && (
-                  <span className="ml-auto rounded-full bg-bad-bg px-2 py-0.5 font-mono text-[10px] text-bad">
-                    {lowStockCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="border-t border-line pt-3.5">
+      <a href="#kandungan" className="skip-link">
+        Langkau ke kandungan utama
+      </a>
+
+      {/* Top navigation (Kedai Kaca) */}
+      <header className="topbar">
+        <div className="mx-auto flex h-[60px] max-w-[1180px] items-center justify-between gap-4 px-4 md:px-7">
+          <Link href="/" aria-label="KOPI SENJA - Ringkasan" className="shrink-0">
+            <BrandMark compact />
+          </Link>
+
+          <nav aria-label="Utama" className="hidden items-center gap-1 md:flex">
+            {NAV.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="nav-pill"
+                  data-active={active}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <Icon size={15} weight={active ? "fill" : "regular"} aria-hidden="true" />
+                  {item.label}
+                  {item.href === "/stok" && lowStockCount > 0 && (
+                    <span className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad">
+                      {lowStockCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
           <div className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-espresso text-sm font-bold text-surface">
-              {initials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-semibold">{user.name}</div>
+            <div className="hidden text-right sm:block">
+              <div className="truncate text-[13px] font-semibold leading-tight">{user.name}</div>
               <span className={`role-chip ${ROLE_CLASS[user.role] ?? "role-staff"}`}>
                 {user.role}
               </span>
+            </div>
+            <div
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-[12px] font-bold text-accent ring-1 ring-line"
+              aria-hidden="true"
+            >
+              {initials}
             </div>
             <button
               onClick={logout}
@@ -111,50 +116,32 @@ export function AppShell({
               aria-label="Log keluar"
               className="grid h-9 w-9 place-items-center rounded-full border border-line text-taupe transition-colors hover:bg-surface-2 hover:text-espresso disabled:opacity-50"
             >
-              <SignOut size={17} />
+              <SignOut size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
-      </aside>
 
-      {/* Main */}
-      <main className="mx-auto max-w-[1180px] px-4 pb-24 pt-6 md:ml-[276px] md:px-7 md:pb-16">
-        {children}
-      </main>
-
-      {/* Mobile FAB */}
-      <button
-        onClick={() => setSheetOpen(true)}
-        aria-label="Menu"
-        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-espresso text-surface shadow-soft md:hidden"
-      >
-        <List size={26} />
-      </button>
-
-      {/* Backdrop + sheet mobile */}
-      <div
-        className={`sheet-backdrop ${sheetOpen ? "show" : ""}`}
-        onClick={() => setSheetOpen(false)}
-      />
-      <div className={`sheet ${sheetOpen ? "show" : ""}`}>
-        <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-line" />
-        <nav className="flex flex-col gap-0.5">
+        {/* Mobile: nav tabs mendatar di bawah top bar */}
+        <nav
+          aria-label="Utama (mudah alih)"
+          className="flex gap-1 overflow-x-auto border-t border-line-soft px-4 py-2 md:hidden"
+          style={{ overscrollBehaviorX: "contain" }}
+        >
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
             return (
               <Link
-                key={item.href}
+                key={`m-${item.href}`}
                 href={item.href}
-                onClick={() => setSheetOpen(false)}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium ${
-                  active ? "bg-accent-soft text-accent" : "text-espresso"
-                }`}
+                className="nav-pill"
+                data-active={active}
+                aria-current={active ? "page" : undefined}
               >
-                <Icon size={20} />
+                <Icon size={15} weight={active ? "fill" : "regular"} aria-hidden="true" />
                 {item.label}
                 {item.href === "/stok" && lowStockCount > 0 && (
-                  <span className="ml-auto rounded-full bg-bad-bg px-2 py-0.5 font-mono text-[10px] text-bad">
+                  <span className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad">
                     {lowStockCount}
                   </span>
                 )}
@@ -162,26 +149,15 @@ export function AppShell({
             );
           })}
         </nav>
-        <div className="mt-2.5 flex items-center gap-2.5 border-t border-line px-2 pt-3.5">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-espresso text-sm font-bold text-surface">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13.5px] font-semibold">{user.name}</div>
-            <span className={`role-chip ${ROLE_CLASS[user.role] ?? "role-staff"}`}>
-              {user.role}
-            </span>
-          </div>
-          <button
-            onClick={logout}
-            disabled={busy}
-            aria-label="Log keluar"
-            className="grid h-9 w-9 place-items-center rounded-full border border-line text-taupe"
-          >
-            <SignOut size={17} />
-          </button>
-        </div>
-      </div>
+      </header>
+
+      {/* Main */}
+      <main
+        id="kandungan"
+        className="mx-auto max-w-[1180px] px-4 pb-24 pt-6 md:px-7 md:pb-16"
+      >
+        {children}
+      </main>
     </>
   );
 }

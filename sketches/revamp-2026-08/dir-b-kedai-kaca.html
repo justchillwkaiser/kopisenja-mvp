@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arah B — Kedai Kaca</title>
+<style>
+/* Direction B: Kedai Kaca — grounded: design-systems-catalog/linear-app (light adaptation) */
+:root {
+  --bg:#fcfcfd; --surface:#ffffff; --surface-2:#f4f5f8;
+  --fg:#16171a; --fg-2:#5c5f66; --muted:#8a8d94;
+  --border:rgba(20,22,26,0.09); --border-soft:rgba(20,22,26,0.055);
+  --accent:#7a5c3a; --accent-soft:#f3ede5;   /* kopi, bukan indigo — brand KOPI SENJA */
+  --ok:#3a8a5c; --warn:#9a6b2f; --bad:#b0503f;
+  --mono: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  --shadow: 0 1px 2px rgba(20,22,26,0.05), 0 4px 12px rgba(20,22,26,0.05);
+}
+* { box-sizing:border-box; margin:0; }
+body { background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, 'Inter', sans-serif; font-size:13.5px; padding:20px; }
+header { display:flex; justify-content:space-between; align-items:center; padding:10px 0 14px; border-bottom:1px solid var(--border-soft); margin-bottom:20px; }
+.brand { font-weight:650; letter-spacing:-0.01em; font-size:14px; }
+.brand i { color:var(--accent); font-style:normal; }
+.nav { display:flex; gap:2px; }
+.nav a { font-size:12.5px; color:var(--fg-2); text-decoration:none; padding:6px 12px; border-radius:6px; }
+.nav a.on { background:var(--surface-2); color:var(--fg); font-weight:550; }
+.nav a:hover { background:var(--surface-2); }
+.u { font-size:12px; color:var(--fg-2); display:flex; align-items:center; gap:8px; }
+.avatar { width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; font-size:9px; font-weight:650; }
+.kpis { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden; }
+.kpi { padding:16px 18px; }
+.kpi + .kpi { border-left:1px solid var(--border-soft); }
+.kpi .k { font-size:11.5px; color:var(--muted); font-weight:500; }
+.kpi .v { font-size:24px; font-weight:600; letter-spacing:-0.02em; margin:5px 0 3px; font-variant-numeric:tabular-nums; }
+.kpi .d { font-size:11.5px; font-weight:500; }
+.up { color:var(--ok); } .down { color:var(--bad); } .flat { color:var(--muted); }
+.grid { display:grid; grid-template-columns:1.7fr 1fr; gap:14px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:18px; }
+.card h2 { font-size:12.5px; font-weight:600; color:var(--fg-2); margin-bottom:14px; }
+.spark { display:flex; align-items:flex-end; gap:8px; height:96px; }
+.spark i { flex:1; background:var(--accent-soft); border-radius:4px 4px 0 0; }
+.spark i.hi { background:var(--accent); }
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th { font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); text-align:left; font-weight:550; padding:6px 8px; border-bottom:1px solid var(--border-soft); }
+td { padding:9px 8px; border-bottom:1px solid var(--border-soft); }
+tr:last-child td { border-bottom:0; }
+td.num { font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; font-size:12px; }
+.tag { font-size:10.5px; font-weight:550; padding:2px 8px; border-radius:999px; }
+.tag-ok { background:#e7f2ec; color:var(--ok); }
+.tag-warn { background:#f5ecdd; color:var(--warn); }
+.tag-bad { background:#f5e3df; color:var(--bad); }
+.banner { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--bad); border-radius:10px; padding:11px 16px; margin-bottom:16px; box-shadow:var(--shadow); font-size:12.5px; }
+.banner a { font-size:12px; font-weight:550; color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">Kopi <i>Senja</i></div>
+    <nav class="nav"><a class="on" href="#">Ringkasan</a><a href="#">Stok</a><a href="#">Cawangan</a><a href="#">Laporan</a></nav>
+    <div class="u"><span>Puan Aiman</span><span class="avatar">PA</span></div>
+  </header>
+
+  <div class="banner">
+    <span><b style="color:var(--bad)">4 item stok rendah</b> di 2 cawangan — semak sebelum buka esok</span>
+    <a href="#">Lihat stok →</a>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">Jualan Hari Ini</div><div class="v">RM 2,340</div><div class="d up">↑ 12% semalam</div></div>
+    <div class="kpi"><div class="k">Jualan Minggu Ini</div><div class="v">RM 15,880</div><div class="d up">↑ 8% minggu lepas</div></div>
+    <div class="kpi"><div class="k">Item Dijual</div><div class="v">412</div><div class="d flat">73 item unik</div></div>
+    <div class="kpi"><div class="k">Stok Rendah</div><div class="v">4</div><div class="d down">2 outlet terlibat</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Jualan 7 Hari Terakhir</h2>
+      <div class="spark">
+        <i style="height:45%"></i><i style="height:58%"></i><i style="height:50%"></i><i style="height:68%"></i><i class="hi" style="height:90%"></i><i style="height:74%"></i><i style="height:63%"></i>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Perlu Tindakan</h2>
+      <table>
+        <tr><td>Espresso Bean</td><td class="num">2 kg</td><td><span class="tag tag-bad">Habis</span></td></tr>
+        <tr><td>Susu Segar</td><td class="num">6 L</td><td><span class="tag tag-warn">Rendah</span></td></tr>
+        <tr><td>Gula Sirup</td><td class="num">3 btl</td><td><span class="tag tag-warn">Rendah</span></td></tr>
+        <tr><td>Cup 12oz</td><td class="num">40 pc</td><td><span class="tag tag-warn">Rendah</span></td></tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
