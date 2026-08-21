@@ -228,6 +228,7 @@ body {
   border-radius: 8px;
   transition: background 0.12s ease, color 0.12s ease;
   white-space: nowrap;
+  min-height: 44px; /* AUD-REM-002: tap target ≥44px */
 }
 .nav-pill:hover {
   background: var(--color-surface-2);
@@ -239,9 +240,23 @@ body {
   font-weight: 600;
 }
 
+/* AUD-REM-007: scroll affordance untuk tab nav mobile (fade kanan bila boleh scroll) */
+.nav-scroll {
+  background-image:
+    linear-gradient(to right, var(--color-cream) 30%, transparent),
+    linear-gradient(to left, var(--color-cream) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(20,22,26,0.12), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgba(20,22,26,0.12), transparent);
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
 /* ---------- Table ---------- */
 
 .table-wrap {
+  position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
@@ -249,6 +264,21 @@ body {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  /* AUD-REM-001: scroll affordance — fade kanan muncul hanya bila masih boleh scroll.
+     Teknik: background attachment local (Lea Verou). Shadow hilang di hujung scroll. */
+  background-image:
+    linear-gradient(to right, var(--color-surface) 30%, transparent),
+    linear-gradient(to left, var(--color-surface) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(20,22,26,0.14), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgba(20,22,26,0.14), transparent);
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+.table-wrap > table {
+  position: relative;
+  z-index: 0;
 }
 .table-wrap table {
   width: 100%;

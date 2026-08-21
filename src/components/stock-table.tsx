@@ -28,7 +28,7 @@ export function StockTable({ items }: { items: StockItem[] }) {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+            className={`inline-flex min-h-[44px] items-center rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
               filter === tab.key
                 ? "border-espresso bg-espresso text-surface"
                 : "border-line bg-surface text-taupe hover:text-espresso"
@@ -50,9 +50,9 @@ export function StockTable({ items }: { items: StockItem[] }) {
           <thead>
             <tr>
               <th className="sticky-col">Produk</th>
+              <th>Status</th>
               <th>Cawangan</th>
               <th>Tahap Stok</th>
-              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -73,6 +73,11 @@ export function StockTable({ items }: { items: StockItem[] }) {
                       </div>
                     </div>
                   </td>
+                  <td className="whitespace-nowrap">
+                    <span className={`badge ${item.status === "OK" ? "badge-ok" : item.status === "RENDAH" ? "badge-warn" : "badge-bad"}`}>
+                      {item.status}
+                    </span>
+                  </td>
                   <td className="whitespace-nowrap">{item.outletName}</td>
                   <td className="whitespace-nowrap">
                     <div className="flex items-center gap-2.5">
@@ -83,11 +88,6 @@ export function StockTable({ items }: { items: StockItem[] }) {
                         {item.quantity} {item.unit}
                       </span>
                     </div>
-                  </td>
-                  <td className="whitespace-nowrap">
-                    <span className={`badge ${item.status === "OK" ? "badge-ok" : item.status === "RENDAH" ? "badge-warn" : "badge-bad"}`}>
-                      {item.status}
-                    </span>
                   </td>
                 </tr>
               );
