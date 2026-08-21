@@ -88,8 +88,11 @@ export function AppShell({
                   <Icon size={15} weight={active ? "fill" : "regular"} aria-hidden="true" />
                   {item.label}
                   {item.href === "/stok" && lowStockCount > 0 && (
-                    <span className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad">
-                      {lowStockCount}
+                    <span
+                      className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad"
+                      aria-label={`${lowStockCount} item stok rendah`}
+                    >
+                      <span aria-hidden="true">{lowStockCount}</span>
                     </span>
                   )}
                 </Link>
@@ -142,8 +145,11 @@ export function AppShell({
                 <Icon size={15} weight={active ? "fill" : "regular"} aria-hidden="true" />
                 {item.label}
                 {item.href === "/stok" && lowStockCount > 0 && (
-                  <span className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad">
-                    {lowStockCount}
+                  <span
+                    className="rounded-full bg-bad-bg px-1.5 py-0.5 font-mono text-[9px] text-bad"
+                    aria-label={`${lowStockCount} item stok rendah`}
+                  >
+                    <span aria-hidden="true">{lowStockCount}</span>
                   </span>
                 )}
               </Link>

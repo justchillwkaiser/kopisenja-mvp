@@ -1,4 +1,4 @@
-import { TrendUp, TrendDown, Warning, Package, Receipt } from "@phosphor-icons/react/dist/ssr";
+import { TrendUp, Warning, Package, Receipt } from "@phosphor-icons/react/dist/ssr";
 import { getSummary } from "@/server/services/summary.service";
 
 function rm(n: number) {
