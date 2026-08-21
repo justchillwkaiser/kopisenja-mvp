@@ -45,7 +45,8 @@ export function StockTable({ items }: { items: StockItem[] }) {
         {visible.length} item ditunjuk
       </p>
 
-      <div className="table-wrap overflow-x-auto" aria-live="polite">
+      <div className="table-scroll">
+        <div className="table-wrap overflow-x-auto" aria-live="polite">
         <table className="min-w-[680px]">
           <thead>
             <tr>
@@ -94,6 +95,7 @@ export function StockTable({ items }: { items: StockItem[] }) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {visible.length === 0 && (

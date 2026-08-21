@@ -240,21 +240,51 @@ body {
   font-weight: 600;
 }
 
-/* AUD-REM-007: scroll affordance untuk tab nav mobile (fade kanan bila boleh scroll) */
+/* AUD-REM-007: scroll affordance untuk tab nav mobile — fade kanan via wrapper */
 .nav-scroll {
-  background-image:
-    linear-gradient(to right, var(--color-cream) 30%, transparent),
-    linear-gradient(to left, var(--color-cream) 30%, transparent),
-    radial-gradient(farthest-side at 0 50%, rgba(20,22,26,0.12), transparent),
-    radial-gradient(farthest-side at 100% 50%, rgba(20,22,26,0.12), transparent);
-  background-position: 0 0, 100% 0, 0 0, 100% 0;
-  background-repeat: no-repeat;
-  background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
-  background-attachment: local, local, scroll, scroll;
+  position: relative;
+}
+.nav-scroll::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--color-cream) 82%);
+  opacity: 0;
+}
+@media (max-width: 767px) {
+  .nav-scroll::after {
+    opacity: 1;
+  }
 }
 
 /* ---------- Table ---------- */
 
+/* AUD-REM-001: scroll affordance — fade kanan pada mobile menandakan jadual lebih lebar.
+   Wrapper luar (.table-scroll) memegang fade supaya ia tidak ikut scroll. */
+.table-scroll {
+  position: relative;
+}
+.table-scroll::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  border-radius: 0 var(--radius-panel) var(--radius-panel) 0;
+  background: linear-gradient(to right, transparent, var(--color-surface) 82%);
+  opacity: 0;
+}
+@media (max-width: 767px) {
+  .table-scroll::after {
+    opacity: 1;
+  }
+}
 .table-wrap {
   position: relative;
   background: var(--color-surface);
@@ -264,21 +294,6 @@ body {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  /* AUD-REM-001: scroll affordance — fade kanan muncul hanya bila masih boleh scroll.
-     Teknik: background attachment local (Lea Verou). Shadow hilang di hujung scroll. */
-  background-image:
-    linear-gradient(to right, var(--color-surface) 30%, transparent),
-    linear-gradient(to left, var(--color-surface) 30%, transparent),
-    radial-gradient(farthest-side at 0 50%, rgba(20,22,26,0.14), transparent),
-    radial-gradient(farthest-side at 100% 50%, rgba(20,22,26,0.14), transparent);
-  background-position: 0 0, 100% 0, 0 0, 100% 0;
-  background-repeat: no-repeat;
-  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
-  background-attachment: local, local, scroll, scroll;
-}
-.table-wrap > table {
-  position: relative;
-  z-index: 0;
 }
 .table-wrap table {
   width: 100%;

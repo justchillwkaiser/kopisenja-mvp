@@ -122,11 +122,12 @@ export function AppShell({
         </div>
 
         {/* Mobile: nav tabs mendatar di bawah top bar */}
-        <nav
-          aria-label="Utama (mudah alih)"
-          className="nav-scroll flex gap-1 overflow-x-auto border-t border-line-soft px-4 py-2 md:hidden"
-          style={{ overscrollBehaviorX: "contain" }}
-        >
+        <div className="nav-scroll md:hidden">
+          <nav
+            aria-label="Utama (mudah alih)"
+            className="flex gap-1 overflow-x-auto border-t border-line-soft px-4 py-2"
+            style={{ overscrollBehaviorX: "contain" }}
+          >
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -148,7 +149,8 @@ export function AppShell({
               </Link>
             );
           })}
-        </nav>
+          </nav>
+        </div>
       </header>
 
       {/* Main */}
