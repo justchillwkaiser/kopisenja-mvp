@@ -7,7 +7,8 @@
   --color-surface-2: #f4f5f8;
   --color-espresso: #16171a;
   --color-taupe: #5c5f66;
-  --color-taupe-faint: #8a8d94;
+  /* AUD-REM-003: digelapkan dari #8a8d94 (3.32:1) ke #6b6e75 (≥4.5:1 AA pada semua permukaan) */
+  --color-taupe-faint: #6b6e75;
   --color-line: rgba(20, 22, 26, 0.09);
   --color-line-soft: rgba(20, 22, 26, 0.055);
   --color-accent: #7a5c3a;
@@ -60,12 +61,20 @@ body {
   border-radius: 4px;
 }
 
+/* AUD-REM-004: refined — hapus pergerakan (transform/animasi) tetapi kekalkan
+   feedback perubahan keadaan (opacity/colour fade ringkas) supaya UI tetap responsif. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  /* Benarkan fade opacity halus — tiada pergerakan, hanya kejelasan keadaan */
+  a, button, input, .badge, .nav-pill, [role="button"] {
+    transition-property: color, background-color, border-color, opacity !important;
+    transition-duration: 0.1ms !important;
   }
 }
 

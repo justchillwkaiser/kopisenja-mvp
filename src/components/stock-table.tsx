@@ -46,7 +46,7 @@ export function StockTable({ items }: { items: StockItem[] }) {
       </p>
 
       <div className="table-scroll">
-        <div className="table-wrap overflow-x-auto" aria-live="polite">
+        <div className="table-wrap overflow-x-auto">
         <table className="min-w-[680px]">
           <thead>
             <tr>

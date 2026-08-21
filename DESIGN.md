@@ -17,7 +17,7 @@
 | Surface 2 | `#f4f5f8` | Kumpulan senyap, latar nav aktif, bar trek |
 | Espresso | `#16171a` | Teks utama dan aksi utama (near-black neutral) |
 | Taupe | `#5c5f66` | Teks sekunder boleh baca |
-| Muted | `#8a8d94` | Label kecil, metadata |
+| Muted | `#6b6e75` | Label kecil, metadata (≥4.5:1 AA) |
 | Border | `rgba(20,22,26,0.09)` | Border standard (halus, bukan garis keras) |
 | Border soft | `rgba(20,22,26,0.055)` | Pembahagi dalam panel |
 | Accent | `#7a5c3a` | Aksen kopi — CTA, aktif, penekanan |
